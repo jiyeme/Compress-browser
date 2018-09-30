@@ -1,0 +1,3 @@
+<?php
+headecho::location('/wap/');
+?>

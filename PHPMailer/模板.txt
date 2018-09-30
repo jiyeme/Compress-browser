@@ -1,0 +1,27 @@
+部分修改后即可使用。更详细教程请访问：http://blog.csdn.net/zm2714/article/details/7992910
+
+$body=$_smtp_body;
+$mail=new PHPMailer();//得到一个PHPMailer实例
+//$mail->SMTPSecure='tls';
+$mail->CharSet="utf-8"; //设置编码
+$mail->IsSMTP();//设置采用SMTP方式发送邮件
+$mail->Host=$_smtp_server;//设置SMTP邮件服务器的地址
+$mail->Port=$_smtp_port;//设置邮件服务器的端口，默认为25
+$mail->From=$_smtp_from_mail; //设置发件人的邮箱地址
+$mail->FromName=$_smtp_from_name;//设置发件人的姓名
+$mail->Username=$_smtp_username;
+$mail->Password=$_smtp_password;
+$mail->AddAddress("$email","");//设置收件的地址(参数1)和姓名(参数2)
+$mail->SMTPAuth=true;//开启SMTP认证
+$mail->Subject=$_smtp_subject;//设置邮件的标题
+//$mail->AltBody="text/html";
+$mail->Body=$body;//邮件内容
+$mail->IsHTML(true);//设置内容是否为html类型
+//$mail->WordWrap=50;                                 //设置每行的字符数
+//$mail->AddReplyTo("samzhang@tencent.com","samzhang");     //设置回复的收件人的地址
+$mail->SMTPDebug=0;
+if($mail->Send()){//发送邮件
+  exit 'ok';
+}else{
+  exit 'fail';
+}
