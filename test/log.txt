@@ -1,0 +1,148 @@
+
+Accept: text/html, application/xml;q=0.9, application/xhtml+xml, application/vnd.wap.xhtml+xml, application/vnd.wap.wmlc;q=0.9, application/vnd.wap.wmlscriptc;q=0.7, text/vnd.wap.wml;q=0.7, */*;q=0.1
+
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
+
+Host: yl.jysafe.cn
+
+Jiuwapb: 20120410
+
+User-Agent: Opera/9.80 (Windows NT 5.1; U; zh-cn) Presto/2.6.30 Version/10.63
+
+Accept: text/html, application/xml;q=0.9, application/xhtml+xml, application/vnd.wap.xhtml+xml, application/vnd.wap.wmlc;q=0.9, application/vnd.wap.wmlscriptc;q=0.7, text/vnd.wap.wml;q=0.7, */*;q=0.1
+
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
+
+Client-Ip: 218.201.170.205
+
+Host: yl.jysafe.cn
+
+Jiuwapb: 20120410
+
+User-Agent: Mozilla/5.0 (Nokia5800 XpressMusic)UC ApplieWebkit(Gecko) Safari/530
+
+Via: WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)
+
+X-Forwarded-For: 218.201.170.205
+
+X-Network-Info: GPRS,8615006538888,218.201.170.205,cmwap,unsecured
+
+X-Nokia-Connection-Mode: TCP
+
+X-Nokia-Gateway-Id: NWG/4.1/Build4.1.04
+
+X-Nokia-Msisdn: 8615006538888
+
+X-Source-Id: BJGGSN06BMT-CSK
+
+X-Up-Bearer-Type: GPRS/EDGE
+
+X-Up-Calling-Line-Id: 8615006538888
+
+X-Up-Subno: 8615006538888
+
+X-Wap-Profile: http://nds1.nds.nokia.com/uaprof/N6670r100.xml
+
+Accept: application/xhtml+xml,application/xml,text/vnd.wap.wml;q=0.9,text/html;q=0.8,*/*;q=0.7
+
+Brw-App-Ver: 3323
+
+Cookie: PHPSESSID=rn3ea8npmgk1akr8mhh52hpnj7; FREE=0%3Bjysafe%3Bcqc0130
+
+Host: yl.jysafe.cn
+
+Https: 0
+
+Referer: http://web.proxy.51mrp.com/?s=inputaddr
+
+Sky-Real-Ip: 117.136.75.119
+
+Url: http://yl.jysafe.cn/test/user.php
+
+User-Agent: Sky-Wapproxy/v3.20(page,0-1-3322-422007-3323)
+
+X-Forwarded-For: 117.136.75.119
+
+Accept: application/xhtml+xml,application/xml,text/vnd.wap.wml;q=0.9,text/html;q=0.8,*/*;q=0.7
+
+Brw-App-Ver: 3323
+
+Cookie: PHPSESSID=rn3ea8npmgk1akr8mhh52hpnj7; FREE=0%3Bjysafe%3Bcqc0130
+
+Host: yl.jysafe.cn
+
+Https: 0
+
+Referer: http://web.proxy.51mrp.com/?s=inputaddr
+
+Sky-Real-Ip: 117.136.75.74
+
+Url: http://yl.jysafe.cn/test/user.php
+
+User-Agent: Sky-Wapproxy/v3.20(page,0-1-3322-422007-3323)
+
+X-Forwarded-For: 117.136.75.74
+
+Accept: application/xhtml+xml,application/xml,text/vnd.wap.wml;q=0.9,text/html;q=0.8,*/*;q=0.7
+
+Brw-App-Ver: 3323
+
+Cookie: PHPSESSID=rn3ea8npmgk1akr8mhh52hpnj7; FREE=0%3Bjysafe%3Bcqc0130
+
+Host: yl.jysafe.cn
+
+Https: 0
+
+Referer: http://dict.jysafe.cn/?h=&w=´	Iµ«jFyD
+
+Sky-Real-Ip: 117.136.75.94
+
+Url: http://yl.jysafe.cn/test/user.php
+
+User-Agent: Sky-Wapproxy/v3.20(page,0-1-3322-422007-3323)
+
+X-Forwarded-For: 117.136.75.94
+
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+
+Accept-Encoding: gzip, deflate
+
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
+
+Connection: keep-alive
+
+Cookie: __cfduid=dadc23fbc664518ef2e587ebe9477e1261528462032; mp_a36067b00a263cce0299cfd960e26ecf_mixpanel=%7B%22distinct_id%22%3A%20%22164d9aec75a126-04ad52286fa02-7d113749-1fa400-164d9aec75bad%22%2C%22%24initial_referrer%22%3A%20%22https%3A%2F%2Fwww.jysafe.cn%2Fwp-admin%2Fadmin.php%3Fpage%3Dtheme-options.php%22%2C%22%24initial_referring_domain%22%3A%20%22www.jysafe.cn%22%7D
+
+Host: pan.baidu.com.jysafe.cn
+
+Upgrade-Insecure-Requests: 1
+
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3493.3 Safari/537.36
+
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+
+Accept-Encoding: gzip, deflate
+
+Accept-Language: en-US,en;q=0.8
+
+Connection: keep-alive
+
+Host: pan.baidu.com.jysafe.cn
+
+Upgrade-Insecure-Requests: 1
+
+User-Agent: Mozilla/5.0 (Linux; Android 5.0; SM-N9100 Build/LRX21V) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/37.0.0.0 Mobile Safari/537.36 NetType/WIFI
+
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+
+Accept-Encoding: gzip, deflate
+
+Accept-Language: en-US,en;q=0.8
+
+Connection: keep-alive
+
+Host: pan.baidu.com.jysafe.cn
+
+Upgrade-Insecure-Requests: 1
+
+User-Agent: Mozilla/5.0 (Linux; Android 5.0; SM-N9100 Build/LRX21V) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/37.0.0.0 Mobile Safari/537.36 NetType/WIFI

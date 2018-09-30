@@ -1,0 +1,4 @@
+500
+<!--#echo var="HTTP_USER_AGENT" -->
+<!--#echo var="HTTP_HOST" -->
+<!--#echo var="REDIRECT_STATUS" -->

@@ -1,0 +1,22 @@
+
+Accept: text/vnd.wap.wml,text/html, application/vnd.wap.xhtml+xml,application/xhtml+xml,application/xml, image/jpeg;q=0.5,image/png;q=0.5,image/gif;q=0.5,image/*;q=0.6, */*;q=0.6
+
+Accept-Encoding: gzip
+
+Connection: close
+
+Cookie: FREE=0%3Bjysafe%3Bcqc0130;
+
+Host: yl.jysafe.cn
+
+Proxy-Connection: Keep-Alive
+
+Q-Ua: SKYQB13_GA/130014&MTKMTT_3/130014&SKY&111324&6225&70213&4640&V3
+
+User-Agent: MQQBrowser/1.3 (MAUI WAP Browser)
+
+Via: ZXWAP GateWay,ZTE Technologies
+
+X-Forwarded-For: 10.230.213.52
+
+X-Up-Bear-Type: GPRS/EDGE

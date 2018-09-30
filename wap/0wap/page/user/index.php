@@ -1,0 +1,20 @@
+<?php
+[%getuser]
+if(!$USER['islogin'])
+ headecho::gotologin('',true);
+?>
+[html=<%=$USER<('name')>%>-我的空间]
+[head]
+建设中…[br]
+『安全中心』[br]
+-[read=,user,gai_pass]修改密码[/read][br]
+-[read=,user,set_mibao]设置密码保护邮箱/QQ[/read][br]
+-[read=,user,gai_pass_mibao]用密保修改密码[/read][br]
+-[read=,user,gai_login_timeout]修改自动掉线时间[/read][br]
+-[read=,user,gai_sid]更换识别用户的sid[/read][hr]
+『信息修改』[br]
+-[read=,user,gai_name]修改用户名(登陆名)[/read][br]
+-[read=,user,gai_qianm]修改个性签名[/read][br][br]
+-[read=,user,gai_lianx]修改联系方式[/read]
+[hr]返回[read=,index,]首页[/read][br][time][foot]
+[/html]
