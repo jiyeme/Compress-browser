@@ -13,7 +13,7 @@ echo '<b>安装玖玩浏览器</b>';
 echo hr;
 
 echo '感谢您选择并安装玖玩浏览器！<br/>';
-echo '当前版本:'.$version.'<br/>';
+echo '当前版本:'.$version.'(<a href="index.php?do=update">检测升级</a>)<br/>';
 echo hr;
 
 

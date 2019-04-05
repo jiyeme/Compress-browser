@@ -312,7 +312,7 @@ class smtp_class{
 		if($this->WordWrap){
 			$this->Body=wordwrap($this->Body,$this->WordWrap,"\n",1);
 		}
-		$this->send_lines(preg_replace("/\n/","\r\n",$this->Body));
+		$this->send_lines(ereg_replace("\n","\r\n",$this->Body));
 	}
 
 

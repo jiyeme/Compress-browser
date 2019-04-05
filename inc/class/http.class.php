@@ -53,6 +53,7 @@ Class httplib{
 
 	function __destruct(){
 		if ( $this->userType == HTTPLIB_TYPE_FSOCKOPEN && $this->fp ){
+		    //logInfo($this->fp);
 			@fclose($this->fp);
 		}
 	}
@@ -206,8 +207,8 @@ Class httplib{
 				$context['http']['header'] .= "Content-Type: application/x-www-form-urlencoded\r\n";
 			}
 
-			$context = @stream_context_create($context);
-			$body = @file_get_contents($this->_url, false,$context );
+			$context = stream_context_create($context);
+			$body = file_get_contents($this->_url, false,$context );
 			if ( $body === false  ){
 				if ( $this->returnerr ){
 					$this->errormsg = http_error($this->_url, 0,'获取失败',true);
@@ -297,14 +298,14 @@ Class httplib{
 				$ip = $this->_ip;
 				$port = $this->_port;
 			}
-			if (!$this->fp = @fsockopen($ip, $port, $errno, $errstr, $this->outtime)) {
+			if (!$this->fp = fsockopen($ip, $port, $errno, $errstr, $this->outtime)) {
 				$errstr = trim(self::str2utf8($errstr));
 				if ( $this->returnerr ){
-					@fclose($this->fp);
+					fclose($this->fp);
 					$this->errormsg = http_error($this->_url,$errno,$errstr,true);
 					return false;
 				}else{
-					@fclose($this->fp);
+					fclose($this->fp);
 					http_error($this->_url,$errno,$errstr);
 				}
 			}
@@ -352,13 +353,13 @@ Class httplib{
 			}else{
 				$QueryStr = null;
 			}
-			if ( !@fputs($this->fp,$SendStr."\r\n".$QueryStr) ){
+			if ( !fputs($this->fp,$SendStr."\r\n".$QueryStr) ){
 				if ( $this->returnerr ){
-					@fclose($this->fp);
+					fclose($this->fp);
 					$this->errormsg = http_error($this->_url,0,'发送数据失败',true);
 					return false;
 				}else{
-					@fclose($this->fp);
+					fclose($this->fp);
 					http_error($this->_url,0,'发送数据失败');
 				}
 			}
@@ -367,7 +368,7 @@ Class httplib{
 			}
 
 			$header = null;
-			while ( ($line = @fgets($this->fp)) !== false) {
+			while ( ($line = fgets($this->fp)) !== false) {
 				$header .= $line;
 				if ( substr($header,-4) == "\r\n\r\n" || substr($header,-2) == "\n\n" ){
 					break;
@@ -420,7 +421,7 @@ Class httplib{
 				if ( $limit > 0 ){
 					//!feof($this->fp
 					while( true ) {
-						if (!$_response = @fread($this->fp, (!$limit || $limit>8192 )? 8192 : $limit)){
+						if (!$_response = fread($this->fp, (!$limit || $limit>8192 )? 8192 : $limit)){
 							break;
 						}
 						$response .= $_response;
@@ -453,7 +454,7 @@ Class httplib{
 				}
 			}else{
 				while( !feof($this->fp) ) {
-					$response .= @fread($this->fp,4096);
+					$response .= fread($this->fp,4096);
 					if ( $limit_size && strlen($response) > $limit_size ){
 						$limit_size = false;
 						break;
@@ -486,7 +487,7 @@ Class httplib{
 				}
 			}
 			if ( $this->userType == HTTPLIB_TYPE_FSOCKOPEN ){
-				@fclose($this->fp);
+				fclose($this->fp);
 			}
 			$url = $this->_fixURL($this->get_header['LOCATION']);
 			$this->jump--;
@@ -542,7 +543,6 @@ Class httplib{
 
 	private function _parseCOOKIE($array){
 		$name = $value = $path = $expires = $domain = '';
-		$expires = time_()+86400;
 		$array = explode(';', $array) ;
 		if ( !$array ) {
 			$a = strpos($array,'=');
@@ -575,7 +575,7 @@ Class httplib{
 
 	function _parseURL($url){
 		$this->_url = $url;
-		if ( !$aUrl = @parse_url($url) ){
+		if ( !$aUrl = parse_url($url) ){
             if ( $this->returnerr ){
                 http_error($this->_url,0,'URL地址解析失败',true);
                 return false;
@@ -670,7 +670,7 @@ Class httplib{
 		$data = '';
 		if ($bodylen > 0) {
 			if  ($method == 8) {
-				$data = @gzinflate($body);
+				$data = gzinflate($body);
 			}else{
 				return false;
 			}
@@ -685,12 +685,12 @@ Class httplib{
 
 	static function str2utf8($string,&$code=''){
 		$code = mb_detect_encoding($string, array('ASCII','UTF-8','GB2312','GBK','BIG5'));
-		return @mb_convert_encoding($string, 'utf-8', $code);
+		return mb_convert_encoding($string, 'utf-8', $code);
 	}
 
 	static function gethostIp($host,$default=false){
 		if ( $host ){
-			if ( $host1 = @gethostbyname($host)){
+			if ( $host1 = gethostbyname($host)){
 				$host = $host1;
 			}elseif ($default!==false) {
 				$host = $default;
@@ -717,10 +717,11 @@ Class httplib{
 		$time = strtotime_($str);
 		if ( empty($time) ){
 			//$str = preg_replace('@([1-2][0-9][0-9][0-9])@ies', "self::strtotime_(false,'\\1')", $str);
-			$str = preg_replace_callback('/([1-2][0-9][0-9][0-9])/i', function($i){return self::strtotime_(false,$i[1]);}, $str);
+			$str = preg_replace_callback('/([1-2][0-9][0-9][0-9])/i', function ($i){return self::strtotime_(false,$i[1]);}, $str);
 			$time = strtotime_($str);
 			if ( empty($time) ){
-				$str = preg_replace('@([1-3][0-9]\-[a-zA-Z][a-zA-Z][a-zA-Z]\-)([1-9][0-9])@ies', "'\\1' . self::strtotime_(false,'20\\2')", $str);
+				//$str = preg_replace('@([1-3][0-9]\-[a-zA-Z][a-zA-Z][a-zA-Z]\-)([1-9][0-9])@ies', "'\\1' . self::strtotime_(false,'20\\2')", $str);
+				$str = preg_replace_callback('/([1-3][0-9]\-[a-zA-Z][a-zA-Z][a-zA-Z]\-)([1-9][0-9])/i', function ($i){return $i[1] . self::strtotime_(false,'20'.$i[2]);}, $str);
 				$time = strtotime_($str);
 			}
 		}

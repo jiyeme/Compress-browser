@@ -1,7 +1,7 @@
 <?php
 define('DEFINED_JIUWAP','jiuwap.cn');
 
-$install_version = '20120410';
+$install_version = '20120216';
 require 'inc.php';
 
 $version = 0;

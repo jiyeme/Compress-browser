@@ -136,7 +136,7 @@ switch ($arr[2]) {
 		$im = ImageCreateFromPNG($filename);
 		break;
 	case 6://bmp
-		$im = ImageCreateFromBMP1($filename);
+		$im = ImageCreateFromBMP($filename);
 		break;
 	default://
 		$zip = true;

@@ -50,25 +50,25 @@ $b_set['thttp'] = '10485760';
 $b_set['dinit'] = '52428800';
 
 #网盘永久存储目录(如果修改,请注意转移用户文件),末尾必须加/
-$b_set['dfforever'] = DIR.'temp/disk_forever_k6gnzhn/';
+$b_set['dfforever'] = DIR.'temp/disk_forever_hhbm256/';
 
 #网盘临时存储目录(您可以随时删除这些文件),末尾必须加/
-$b_set['dftemp'] = DIR.'temp/disk_temp_k6gnzhn/';
+$b_set['dftemp'] = DIR.'temp/disk_temp_hhbm256/';
 
 #临时中转下载目录(文件),可随时删除,末尾必须加/
-$b_set['rfile'] = DIR.'temp/down_file_k6gnzhn/';
+$b_set['rfile'] = DIR.'temp/down_file_hhbm256/';
 
 #临时中转下载目录(文件),可随时删除,末尾必须加/
-$b_set['rini'] = DIR.'temp/down_ini_k6gnzhn/';
+$b_set['rini'] = DIR.'temp/down_ini_hhbm256/';
 
 #用户缓存目录,末尾必须加/
-$b_set['utemp'] = DIR.'temp/cache_k6gnzhn/';
+$b_set['utemp'] = DIR.'temp/cache_hhbm256/';
 
 #密钥
-$b_set['key1'] = 'ZVL3pxL';
-$b_set['key2'] = 'GD6Dphw';
-$b_set['key3'] = 'yGxtaMe';
-$b_set['key4'] = 'wNm03FioBLyQMlgWHXa6zdhTZsePrqVvOYJ82k79AxtG/K+ERDSInUufb1cCp=4j5';
+$b_set['key1'] = 'Pr4eIJB';
+$b_set['key2'] = 'cckulXl';
+$b_set['key3'] = 'rWRSaIQ';
+$b_set['key4'] = 'zZeFKi6nPORs5ybYv3mp9SdxCH=TGlowMgILBDk7Jq/tr81NW20ja4fcU+hVAEuXQ';
 
 //上述4个目录和4个密钥请严格保密,否则可能威胁服务器安全！！
 
@@ -83,7 +83,6 @@ $b_set['mail']['smtp'] = 'yl.jysafe.cn';
 $b_set['mail']['user'] = 'me@yl.jysafe.cn';
 
 //密码
-//$b_set['mail']['pass'] = 'kezjpcbrmtorceib';
 $b_set['mail']['pass'] = 'CQC.cqc.0130';
 
 //发信人地址
@@ -93,5 +92,5 @@ $b_set['mail']['from'] = 'me@yl.jysafe.cn';
 $b_set['rootpassword'] = 'jysafe';
 
 /*
-安装于2018-9-24 07:56:41
+安装于2018-10-5 16:12:21
 */

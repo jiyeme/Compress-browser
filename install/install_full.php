@@ -85,12 +85,12 @@ if ( file_exists(DIR.'set_config/set_config.php') ){
 	$db_table = post('db_table','jysafec1_sql');
 	$icp = post('icp','');
 	$title_str = post('title_str','[压流]');
-	$webtitle = post('webtitle','玖玩浏览器');
-	$disktitle = post('disktitle','玖玩网盘');
-	$mail_smtp = post('mail_smtp','smtp.qq.com');
-	$mail_user = post('mail_user','me@jysafe.cn');
-	$mail_pass = post('mail_pass','kezjpcbrmtorceib');
-	$mail_from = post('mail_from','me@jysafe.cn');
+	$webtitle = post('webtitle','祭夜浏览器');
+	$disktitle = post('disktitle','祭夜网盘');
+	$mail_smtp = post('mail_smtp','yl.jysafe.cn');
+	$mail_user = post('mail_user','me@yl.jysafe.cn');
+	$mail_pass = post('mail_pass','CQC.cqc.0130');
+	$mail_from = post('mail_from','me@yl.jysafe.cn');
 	$tupload = post('tupload','10');
 	$tdown = post('tdown','10');
 	$tmail = post('tmail','10');
@@ -98,7 +98,7 @@ if ( file_exists(DIR.'set_config/set_config.php') ){
 	$dhttp = post('dhttp','10');
 	$thttp = post('thttp','10');
 	$dinit = post('dinit','50');
-	$rootpassword = post('rootpassword','jiuwap');
+	$rootpassword = post('rootpassword','jysafe');
 	$是否是覆盖安装 = false;
 }
 

@@ -5,6 +5,16 @@ if ( !defined('DIR') ){
 
 
 @include DIR.'set_config/set_config.php';
+if ( $version && $version<'20110901' || !isset($b_set['rootpassword']) ){
+	top('错误');
+	echo '<b>玖玩浏览器版本过低</b>';
+	echo hr;
+	echo '请先将浏览器升级至20110901版再进行操作！<a href="index.php?do=update">检测升级</a><br/>';
+	foot();
+	exit;
+}
+
+
 if ( !isset($_REQUEST['psw']) || $_REQUEST['psw']<>$b_set['rootpassword'] ){
 	top('清理缓存 - 玖玩浏览器');
 	echo '<b>清理浏览器缓存</b>';

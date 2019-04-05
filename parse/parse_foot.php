@@ -117,8 +117,9 @@ if ( strpos($bottom_str,'[')!==false && strpos($bottom_str,']')!==false ){
         $bottom_str = str_replace('[go]','<input name="url'.$browser->rand.'" type="text" value="'.htmlspecialchars($url).'"/><br/><anchor><go href="index.php" method="get"><postfield name="url" value="$(url'.$browser->rand.')" /></go>进入</anchor>',$bottom_str);
     }
     if ( strpos($bottom_str,'[time=')!==false && strpos($bottom_str,']')!==false ){
+        //jysafe
         //$bottom_str = preg_replace('/\[time=(.*?)\]/ies', "date_('\\1')", $bottom_str);
-        $bottom_str = preg_replace_callback('/\[time=(.*?)\]/i', function($r){return date_($r[1]);}, $bottom_str);
+        $bottom_str = preg_replace_callback('/\[time=(.*?)\]/i', function($i){return date_($i[1]);}, $bottom_str);
     }
 }
 $bottom_str = init_ad().$bottom_str;
@@ -136,9 +137,15 @@ if ($code<>'utf-8'){
 }
 
 if ( stripos($html,'</body>') ){
+   if ( defined('ML')  && ML ){
+       $html = str_ireplace('</title>','<a ontimer="?s=2" href="?s=2"></a></title>',$html);
+   }
    $html = str_ireplace('<title>','<title>'.$title_str,$html);
    $html = str_ireplace('</body>',$bottom_str.'</body>',$html);
 }elseif ( stripos($html,'</card>') ){
+   if ( defined('ML')  && ML ){
+       $html = str_ireplace('<wml>','<wml><a ontimer="?s=2" href="?s=2"></a>',$html);
+   }
    $html = preg_replace('/<card(.*?)title="(.*?)"/i','<card$1title="'.$title_str.'$2"', $html);
    $html = str_ireplace('</card>',$bottom_str.'</card>',$html);
 }else{
@@ -158,5 +165,10 @@ if ( $code <> 'utf-8' || $mime == 'text/vnd.wap.wml' ){
 	}
 	header('Content-Type: '.$mime.'; charset='.$code);
 }
+
+if ( defined('ML')  && ML ){
+   $html = fxURL($html);
+}
+
 echo $html;
 ob_end_flush();

@@ -38,11 +38,8 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	$jiuwap_template = preg_replace('/\[main_menu_update=(.*?)\]/i', "<a href=\"install\">$1</a>",$jiuwap_template) ;
 
 
-	//strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace('/\[main_map_sites=(.*?)\]/ies', "template_main_map_sites('\\1')", $jiuwap_template);
-	strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace_callback('/\[main_map_sites=(.*?)\]/i', function($i){return template_main_map_sites($i[1]);}, $jiuwap_template);
-	
-	//strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace('/\[main_wap_select=(.*?)\|(.*?)\]/ies', "template_wap_select('\\1','\\2')", $jiuwap_template);
-	strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace_callback('/\[main_wap_select=(.*?)\|(.*?)\]/i',  function($i){return template_wap_select($i[1],$i[2]);}, $jiuwap_template);
+	strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace('/\[main_map_sites=(.*?)\]/ies', "template_main_map_sites('\\1')", $jiuwap_template);
+	strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace('/\[main_wap_select=(.*?)\|(.*?)\]/ies', "template_wap_select('\\1','\\2')", $jiuwap_template);
 
 
 	$jiuwap_template = str_replace('[username]',$browser->uname,$jiuwap_template);
@@ -86,7 +83,7 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	$jiuwap_template = preg_replace('/\[menu_help=(.*?)\]/i', "<a href=\"help.php?h=".$h."\">$1</a>",$jiuwap_template) ;
 	$jiuwap_template = str_replace('[menu_form_url]',template_menu_form_url(),$jiuwap_template);
 
-	$jiuwap_template = preg_replace_callback('/\[title=(.*?)\]/i', function($i){return template___top($i[1]);}, $jiuwap_template);
+	$jiuwap_template = preg_replace('/\[title=(.*?)\]/ies', "template___top('\\1')", $jiuwap_template);
 
 	if ( !$is_run_temp_top ){
         $jiuwap_template = $browser->template_top('',$jump,true,'utf-8',$jump_wait) . $jiuwap_template;

@@ -101,9 +101,9 @@ if ( $do == 'delete'){
 	<a href="disk.php?cmd=newzip&amp;uid='.$id.$h.'">新建压缩包</a><br/>
 	<a href="disk.php?cmd=upload&amp;uid='.$id.$h.'">上传文件</a><br/>';
 	if ( $h ){
-		echo '<a href="/?m='.$u.'">返回浏览器</a><br/>';
+		echo '<a href="index.php?m='.$u.'">返回浏览器</a><br/>';
 	}else{
-		echo '<a href="/">返回浏览器</a><br/>';
+		echo '<a href="index.php">返回浏览器</a><br/>';
 	}
 }
 

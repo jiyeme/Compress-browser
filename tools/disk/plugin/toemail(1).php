@@ -8,12 +8,11 @@ if ( isset($_GET['yes']) ){
 		set_cache_forever('email'.$disk['id'],$mail_url);
 		set_time_limit(600);
 		require_once DIR.'inc/class/smtp.class.php';
-		//include DIR. 'set_config/set_mail.php';
+		include DIR. 'set_config/set_mail.php';
 
 		$mail=new smtp_class;
 		$mail->CharSet = 'utf-8';
 		$mail->Host	= $b_set['mail']['smtp'];
-		//$mail->SMTPSecure = "ssl";
 		$mail->Port	= 25;
 		$mail->Timeout	= 10;
 		$mail->Timezone	= "+0800";
@@ -29,8 +28,7 @@ if ( isset($_GET['yes']) ){
 		$mail->AddTo($mail_url, '亲爱的朋友');
 		$mail->Subject=$dir['title'];
 		$mail->Body='欢迎使用'.$b_set['disktitle'].'-邮箱投递服务，本服务完全免费。'."\r\n".'我们的网站：http://'.$b_set['host'].'，感谢大家的支持。'."\r\n".'(本邮件由'.$b_set['disktitle'].'系统发送，请勿回复。)';
-		$filedir = $b_set['dfforever'].$dir['file'];
-		//$mail->AddAttachment($filedir,$dir['title'],get_file_mime(get_short_file_mime($dir['title'])));
+		$mail->AddAttachment($b_set['dfforever'].$dir['file'],$dir['title'],get_file_mime(get_short_file_mime($dir['title'])));
 
 		try{
 			if($mail->Send()){

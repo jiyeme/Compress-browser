@@ -61,6 +61,9 @@ Function top_wap($title,$refreshurl=''){
 </head><body>
 <?php
 	}
+    if ( defined('ML')  && ML ){
+        echo '<a href="?s=2"></a>';
+    }
 }
 
 Function foot_wap($exit=true){
@@ -78,6 +81,9 @@ function exit_fix_html($exit=true){
 	ob_clean();
 	$str = str_replace(array("\n","\r","\t"),'',$str);
 	$str = str_replace(' />','/>',$str);
+    if ( defined('ML')  && ML ){
+        $str = fxURL($str );
+    }
 	echo $str;
 	if ( $exit){
 		ob_end_flush();exit;

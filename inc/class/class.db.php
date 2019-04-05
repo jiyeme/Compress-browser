@@ -1,7 +1,7 @@
 <?php
 /*
  *
- *	MYSQL数据库类
+ *	mysqli数据库类
  *
  *	2011-1-14 @ jiuwap.cn
  *
@@ -14,15 +14,17 @@ if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
 class db{
 	function __construct($dbhost, $dbuser, $dbpw, $dbname, $prefix='', $dbcharset='utf8',$pconnect = null) {
 		$link = null;
-		$func = empty($pconnect) ? 'mysql_connect' : 'mysql_pconnect';
-		if(!$link = @$func($dbhost, $dbuser, $dbpw, 1)) {
+		$func = empty($pconnect) ? 'mysqli_connect' : 'mysqli_pconnect';
+		//logInfo('1111');
+		//$con=mysqli_connect("localhost","wrong_user","my_password","my_db"); 
+		if(!$link = $func($dbhost, $dbuser, $dbpw, $dbname)) {
 			$this->halt('连接失败');
 		} else {
 			$this->curlink = $link;
-			$dbcharset && mysql_query('SET sql_mode="",NAMES "'.$dbcharset.'",CHARACTER SET '.$dbcharset.',CHARACTER_SET_RESULTS='.$dbcharset.',COLLATION_CONNECTION="'.$dbcharset.'_general_ci"', $link);
+			$dbcharset && mysqli_query($link, 'SET sql_mode="",NAMES "'.$dbcharset.'",CHARACTER SET '.$dbcharset.',CHARACTER_SET_RESULTS='.$dbcharset.',COLLATION_CONNECTION="'.$dbcharset.'_general_ci"');
 			if ($dbname){
-				if ( !@$this->select_db($dbname, $link) ){
-					$this->halt('数据库丢失');
+				if ( !$this->select_db($dbname) ){
+					$this->halt('数据库丢失',$dbname);
 				}
 			}
 		}
@@ -84,11 +86,11 @@ class db{
 
 
 	function select_db($dbname) {
-		return mysql_select_db($dbname, $this->curlink);
+		return mysqli_select_db($this->curlink, $dbname);
 	}
 
-	function fetch_array($query, $result_type = MYSQL_ASSOC) {
-		return mysql_fetch_array($query, $result_type);
+	function fetch_array($query, $result_type = MYSQLI_ASSOC) {
+		return mysqli_fetch_array($query, $result_type);
 	}
 
 	function fetch_first($sql) {
@@ -100,8 +102,8 @@ class db{
 	}
 
 	function query($sql, $type = '') {
-		$func = $type == 'UNBUFFERED' && @function_exists('mysql_unbuffered_query') ? 'mysql_unbuffered_query' : 'mysql_query';
-		if(!($query = $func($sql, $this->curlink))) {
+		$func = $type == 'UNBUFFERED' && @function_exists('mysqli_unbuffered_query') ? 'mysqli_unbuffered_query' : 'mysqli_query';
+		if(!($query = $func($this->curlink, $sql))) {
 			if(in_array($this->errno(), array(2006, 2013)) && substr($type, 0, 5) != 'RETRY') {
 				$this->connect();
 				return $this->query($sql, 'RETRY'.$type);
@@ -116,55 +118,55 @@ class db{
 	}
 
 	function affected_rows() {
-		return mysql_affected_rows($this->curlink);
+		return mysqli_affected_rows($this->curlink);
 	}
 
 	function error() {
-		return isset($this->curlink) ? mysql_error($this->curlink) : mysql_error();
+		return isset($this->curlink) ? mysqli_error($this->curlink) : mysqli_error($this->curlink);
 	}
 
 	function errno() {
-		return isset($this->curlink) ? mysql_errno($this->curlink) : mysql_errno();
+		return isset($this->curlink) ? mysqli_errno($this->curlink) : mysqli_errno($this->curlink);
 	}
 
 	function result($query, $row = 0) {
-		return @mysql_result($query, $row);
+		return @mysqli_result($query, $row);
 	}
 
 	function num_rows($query) {
-		return mysql_num_rows($query);
+		return mysqli_num_rows($query);
 	}
 
 	function num_fields($query) {
-		return mysql_num_fields($query);
+		return mysqli_num_fields($query);
 	}
 
 	function free_result($query) {
-		return mysql_free_result($query);
+		return mysqli_free_result($query);
 	}
 
 	function insert_id() {
-		return ($id = mysql_insert_id($this->curlink)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
+		return ($id = mysqli_insert_id($this->curlink)) >= 0 ? $id : $this->result($this->query("SELECT last_insert_id()"), 0);
 	}
 
 	function fetch_row($query) {
-		$query = mysql_fetch_row($query);
+		$query = mysqli_fetch_row($query);
 		return $query;
 	}
 
 	function fetch_fields($query) {
-		return mysql_fetch_field($query);
+		return mysqli_fetch_field($query);
 	}
 
 	function version() {
 		if(empty($this->version)) {
-			$this->version = mysql_get_server_info($this->curlink);
+			$this->version = mysqli_get_server_info($this->curlink);
 		}
 		return $this->version;
 	}
 
 	function close() {
-		return @mysql_close($this->curlink);
+		return @mysqli_close($this->curlink);
 	}
 
 	function halt($message='',$sql='') {

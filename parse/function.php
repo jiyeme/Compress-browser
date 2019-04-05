@@ -1,15 +1,15 @@
 <?php
 /*
  *
- *浏览器->解析处理XML用的
+ *	浏览器->解析处理XML用的
  *
- *2011-1-14 @ jiuwap.cn
+ *	2011-1-14 @ jiuwap.cn
  *
  */
 if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-header('Content-Type: text/html; charset=utf-8');
-echo '<a href="http://jiuwap.cn">error</a>';
-exit;
+	header('Content-Type: text/html; charset=utf-8');
+	echo '<a href="http://jiuwap.cn">error</a>';
+	exit;
 }
 
 
@@ -311,15 +311,15 @@ function parse_xml_button($str){
         $type = ' type="'.$type.'"';
     }
     if ( $type == ' type="submit"' ){
-if ( $value == ' value="'.$name_value.'"' ){
-return parse_xml_input($value.$name.$type);
-}else{
-return '<input type="hidden" '.$value.$name.'/>'.parse_xml_input(' value="'.$name_value.'"'.$type);
-//if ( $name_value<>'' ){
-//$name_value = '['.$name_value.']';
-//}
-//return parse_xml_input($value.$name.$type).$name_value;
-}
+		if ( $value == ' value="'.$name_value.'"' ){
+			return parse_xml_input($value.$name.$type);
+		}else{
+			return '<input type="hidden" '.$value.$name.'/>'.parse_xml_input(' value="'.$name_value.'"'.$type);
+			//if ( $name_value<>'' ){
+			//	$name_value = '['.$name_value.']';
+			//}
+			//return parse_xml_input($value.$name.$type).$name_value;
+		}
     }
     return '<input '.$value.$name.$type.'/>';
 }
@@ -382,7 +382,13 @@ function parse_xml_meta($str){
                     $_html2wmp_jump['url'] = '?'.$url;
                     return '';
                 }
-                $content = $time.';?'.$url;
+                if ( defined('ML')  && ML ){
+                    $url = fxURL0('?'.$url,'');
+                    $content = $time.';'.$url;
+                }else{
+                    $content = $time.';?'.$url;
+                }
+
             }
         }
         global $mime;
@@ -452,7 +458,6 @@ function parse_xml_img($str){
     $src = fullurl($src);
     if ( $browser->pic == 4 ){
         return '<img src="'.htmlspecialchars($src).'"'.$alt.'/>';
-        //图片中转链接
     }
     global $url,$mime;
     $src = $browser->cache_add('pic',$src,$url,$mime);
@@ -621,11 +626,11 @@ function parse_xml_a($str){
     $id = get_xml($str,' id');
     $href = get_xml($str,'href');
     $xml_end = get_xml_end($str);
-global $b_set;
-static $httplen = false;
-if ( $httplen ===false ){
-$httplen = strlen('http://'.$b_set['host']);
-}
+	global $b_set;
+	static $httplen = false;
+	if ( $httplen ===false ){
+		$httplen = strlen('http://'.$b_set['host']);
+	}
     if ( $href && substr($href,0,$httplen)=='http://'.$b_set['host'] ){
         return '<a href="'.$href.'"'.$xml_end.'>';
     }
@@ -744,8 +749,8 @@ function fix_wml_form($xml,$str){
     }elseif( $xml == '/go' ){
         return '';
     }else{
-    return '';
-}
+	    return '';
+	}
 }
 
 function fix_wml_form_select($xml,$str){
@@ -766,9 +771,9 @@ function fix_css($str,$fix=true){
     if ( $browser->pic == 0 || $browser->pic == 1 || $browser->pic == 5 ){
         $str = preg_replace("@background:url\((.+?)\)@i", 'background:none', $str);
     }elseif( $browser->pic == 4 ){
-        $str = preg_replace_callback("/background:url\((.+?)\)/i", function($r){return 'background:url('.fullurl($r[1]).')';}, $str);
+        $str = preg_replace_callback("/background:url\((.+?)\)/i", function($i){return 'background:url('.fullurl($i[1]).')';}, $str);
     }else{
-        $str = preg_replace_callback("/background:url\((.+?)\)/i", function($r){return 'background:url(?p='._browser_cache_add_pic($r[1]).')';}, $str);
+        $str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
     }
     return $str;
 }

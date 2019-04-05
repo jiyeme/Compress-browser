@@ -22,7 +22,7 @@ if ( isset($_GET['yes']) ){
 			$im = ImageCreateFromPNG($filename);
 			break;
 		case 6://bmp
-			$im = ImageCreateFromBMP1($filename);
+			$im = ImageCreateFromBMP($filename);
 			break;
 		default://
 			exit;

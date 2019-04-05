@@ -40,7 +40,7 @@ if ( stripos($html,'<noscript')!==false  && stripos($html,'</noscript>')!==false
 	$html = preg_replace('@<noscript(.*?)<\/noscript>@i','', $html);
 }
 if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
-	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function($i){return script_check_jump($i[1]);}, $html);
+	$html = preg_replace('@<script(.*?)<\/script>@ies',"script_check_jump('\\1')", $html);
 }
 
 if ( stripos($html,'<embed')!==false  && stripos($html,'</embed>')!==false  ){
@@ -52,7 +52,7 @@ if ( stripos($html,'<button')!==false  && stripos($html,'</button>')!==false  ){
 }
 
 if ( stripos($html,'<style')!==false  && stripos($html,'style>')!==false  ){
-	$html = preg_replace_callback('/<style(.*?)style>/i',function($i){return '<style'.fix_css($i[1]).'style>';}, $html);
+	$html = preg_replace('@<style(.*?)style>@ies',"'<style'.fix_css('\\1').'style>'", $html);
 }
 
 if ( !isset($code) ){
@@ -75,15 +75,11 @@ if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	$html = str_ireplace('</p>','<br/>', $html);
 }
 
-//jysafe
-//$html = preg_replace('@<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>@ies', "check_xml('\\1','\\2')", $html);
-$html = preg_replace_callback('/<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
+$html = preg_replace('@<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>@ies', "check_xml('\\1','\\2')", $html);
 
 $browser->cacheurl_set();
 
-//jysafe
-//$html = preg_replace('@<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>@ies', "check_xml('\\1','\\2')", $html);
-//$html = preg_replace_callback('/<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
+$html = preg_replace('@<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>@ies', "check_xml('\\1','\\2')", $html);
 
 if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	//处理wml的表单转换成form

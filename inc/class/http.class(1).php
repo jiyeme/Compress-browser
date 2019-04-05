@@ -542,7 +542,6 @@ Class httplib{
 
 	private function _parseCOOKIE($array){
 		$name = $value = $path = $expires = $domain = '';
-		$expires = time_()+86400;
 		$array = explode(';', $array) ;
 		if ( !$array ) {
 			$a = strpos($array,'=');
