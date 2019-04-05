@@ -1,6 +1,12 @@
 <?php
-define('DEFINED_JIUWAP','jiuwap.cn');
-include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+/*
+ *
+ *	浏览器->退出
+ *
+ *	2012/7/26 星期四 @ jiuwap.cn
+ *
+ */
+require 'inc/common.php';
 $browser->user_login_check();
 
 if ( isset($_GET['yes']) ){

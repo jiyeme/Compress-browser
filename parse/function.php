@@ -6,11 +6,7 @@
  *	2011-1-14 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 
 
 function chkCode($string){
@@ -81,19 +77,19 @@ function script_check_jump($str2){
     global $browser;
     $str = '';
     $top = str_pos($str2,'top.location="','"');
-    if ( $top<>'' ){
+    if ( $top!='' ){
         $str .= '[<a href="'.fullurl($top).'">javascript:top.location</a>]';
     }
     $self = str_pos($str2,'self.location="','"');
-    if ( $self<>'' ){
+    if ( $self!='' ){
         $str .= '[<a href="'.fullurl($self).'">javascript:self.location</a>]';
     }
     $href = str_pos($str2,'window.location.href="','"');
-    if ( $href<>'' ){
+    if ( $href!='' ){
         $str .= '[<a href="'.fullurl($href).'">javascript:window.location.href</a>]';
     }
     $navigate = str_pos($str2,'window.navigate("','")');
-    if ( $navigate<>'' ){
+    if ( $navigate!='' ){
         $str .= '[<a href="'.fullurl($navigate).'">javascript:window.navigate</a>]';
     }
     return $str;
@@ -114,7 +110,7 @@ function fullurl($new_url){
         $old_url = @parse_url($fix_url_base);
         $fix_url_base = false;
     }
-    if ( isset($old_url['port']) && $old_url['port']<>80 ){
+    if ( isset($old_url['port']) && $old_url['port']!=80 ){
         $old_url['host'] .= ':'.$old_url['port'];
         unset($old_url['port']);
     }
@@ -144,7 +140,7 @@ function check_xml($xml,$str){
     if ( in_array($xml,array('/iframe','/img','/input','/meta','/link','/footer','footer','/section','section')) ){
         return '';
     }
-    if ( $browser->wap2wml==0 && $mime <> 'text/vnd.wap.wml' && $mime <> 'application/vnd.wap.xhtml+xml'){
+    if ( $browser->wap2wml==0 && $mime != 'text/vnd.wap.wml' && $mime != 'application/vnd.wap.xhtml+xml'){
         if ( strpos($str,'class="')){
             $str = trim(preg_replace('@class="(.*?)"@i','', $str));
         }
@@ -156,7 +152,7 @@ function check_xml($xml,$str){
         }elseif ( in_array($xml,array('br','br/','/table','/div','/li','/ul','/tr','/p','/td')) ){
             return '<br/>';
         }
-    }elseif ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml' ){
+    }elseif ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml' ){
         if ( $xml == '!doctype' ){
             return '<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">';
         }elseif ( $xml == 'html' ){
@@ -176,7 +172,7 @@ function check_xml($xml,$str){
                 return '<br/>';
             }
         }
-    }elseif ( $browser->wap2wml==1 && $mime <> 'text/vnd.wap.wml' ){
+    }elseif ( $browser->wap2wml==1 && $mime != 'text/vnd.wap.wml' ){
         if ( $xml == '!doctype' ){
             return '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">';
         }else{
@@ -199,7 +195,7 @@ function check_xml($xml,$str){
             return parse_xml_wml2web_card($str).'<style>body{font-size:15px;color:#000;font-family:Arial,Helvetica,sans-serif;}a{color:#039;text-decoration:none;}</style></head><body>';
         }elseif ( $xml == 'timer' ){
             $value = get_xml($str,'value');
-            if ( $value <> ''){
+            if ( $value != ''){
                 global $wml2web_card_ontimer;
                 $wml2web_card_ontimer = (int)$value;
             }
@@ -227,9 +223,9 @@ function parse_xml_link($str){
     $rel = get_xml($str,'rel');
     $href = get_xml($str,'href');
     $type = get_xml($str,'type');
-    if ( $type == 'text/css' && $href<>'' && $browser->wap2wml<>0 ){
+    if ( $type == 'text/css' && $href!='' && $browser->wap2wml!=0 ){
         $href = $browser->cache_add('url',fullurl($href));
-        if ( $rel<>'' ){
+        if ( $rel!='' ){
             $rel = ' rel="'.$rel.'"';
         }
         return '<link'.$rel.' type="text/css" href="?v='.$href.'">';
@@ -242,7 +238,7 @@ function parse_xml_wml2web_card($str){
     $title = get_xml($str,'title');
     $ontimer = get_xml($str,'ontimer');
     $str = '';
-    if ( $ontimer<>'' ){
+    if ( $ontimer!='' ){
         global $browser;
         $ontimer = $browser->cache_add('url',fullurl($ontimer));
         $str .= '<meta http-equiv="refresh" content="[#WML2WEB_JUMP_ONTIMER#]; url=?'.$ontimer.'"/>';
@@ -251,7 +247,7 @@ function parse_xml_wml2web_card($str){
         if ( $onenterforward == '' ){
             $onenterbackward = get_xml($str,'onenterbackward');
         }
-        if ( $onenterforward<>'' ){
+        if ( $onenterforward!='' ){
             global $browser;
             $onenterforward = $browser->cache_add('url',fullurl($onenterforward));
             $str .= '<meta http-equiv="refresh" content="0; url=?'.$onenterforward.'"/>';
@@ -280,17 +276,17 @@ function parse_xml_option($str){
     $onpick = get_xml($str,'onpick');
     $selected = get_xml($str,'selected');
     $xml_end = get_xml_end($str);
-    if ( $onpick<>''){
+    if ( $onpick!=''){
         global $browser;
         $onpick = $browser->cache_add('url',fullurl($onpick));
     }
-    if ( $value<>'' ){
+    if ( $value!='' ){
         $value = ' value="'.$value.'"';
     }
-    if ( $onpick<>'' ){
+    if ( $onpick!='' ){
         $onpick = ' onpick="?'.$onpick.'"';
     }
-    if ( $selected<>'' ){
+    if ( $selected!='' ){
         $selected = ' selected="'.$selected.'"';
     }
     return '<option'.$value.$onpick.$selected.$xml_end.'>';
@@ -301,13 +297,13 @@ function parse_xml_button($str){
     $name = get_xml($str,'name');
     $value = get_xml($str,'value');
     $name_value = get_xml($str,'name_value');
-    if ( $value<>'' ){
+    if ( $value!='' ){
         $value = ' value="'.$value.'"';
     }
-    if ( $name<>'' ){
+    if ( $name!='' ){
         $name = ' name="'.$name.'"';
     }
-    if ( $type<>'' ){
+    if ( $type!='' ){
         $type = ' type="'.$type.'"';
     }
     if ( $type == ' type="submit"' ){
@@ -315,7 +311,7 @@ function parse_xml_button($str){
 			return parse_xml_input($value.$name.$type);
 		}else{
 			return '<input type="hidden" '.$value.$name.'/>'.parse_xml_input(' value="'.$name_value.'"'.$type);
-			//if ( $name_value<>'' ){
+			//if ( $name_value!='' ){
 			//	$name_value = '['.$name_value.']';
 			//}
 			//return parse_xml_input($value.$name.$type).$name_value;
@@ -352,14 +348,14 @@ function parse_xml_meta($str){
             $mime = GetMime($content);
         }
     }
-    if ( $name<>'' && in_array(strtolower($name),array('generato','robots','copyright','generator','author','description','keywords','mssmarttagspreventparsing','mobileoptimized','viewport','format-detection'))){
+    if ( $name!='' && in_array(strtolower($name),array('generato','robots','copyright','generator','author','description','keywords','mssmarttagspreventparsing','mobileoptimized','viewport','format-detection'))){
         return '';
     }
-    if ( $http_equiv<>'' && in_array($http_equiv,array('msthemecompatible'))){
+    if ( $http_equiv!='' && in_array($http_equiv,array('msthemecompatible'))){
         return '';
     }
     global $browser;
-    if ( $http_equiv<>'' ){
+    if ( $http_equiv!='' ){
         //html跳转
         if ( $http_equiv == 'refresh' && !empty($content) ){
             $i = strpos($content,';');
@@ -382,29 +378,23 @@ function parse_xml_meta($str){
                     $_html2wmp_jump['url'] = '?'.$url;
                     return '';
                 }
-                if ( defined('ML')  && ML ){
-                    $url = fxURL0('?'.$url,'');
-                    $content = $time.';'.$url;
-                }else{
-                    $content = $time.';?'.$url;
-                }
-
+                $content = $time.';?'.$url;
             }
         }
         global $mime;
-        if ( $browser->wap2wml==3 && $http_equiv=='content-type' && $mime <> 'text/vnd.wap.wml' ){
+        if ( $browser->wap2wml==3 && $http_equiv=='content-type' && $mime != 'text/vnd.wap.wml' ){
             return '';
         }
 
         $http_equiv = ' http-equiv="'.$http_equiv.'"';
     }
-    if ( $content <> '' ){
+    if ( $content != '' ){
         $content = ' content="'.$content.'"';
     }
-    if ( $charset <> '' ){
+    if ( $charset != '' ){
         $charset = ' charset="'.$charset.'"';
     }
-    if ( $name<>'' ){
+    if ( $name!='' ){
         $name = ' name="'.$name.'"';
     }
     return '<meta'.$http_equiv.$content.$charset.$name.'/>';
@@ -418,7 +408,7 @@ function parse_xml_img($str){
         static $show_pic = true;
         if ( $show_pic ){
             global $html,$code;
-            if ( isset($code) && $code<>'' && $code<>'utf-8' ){
+            if ( isset($code) && $code!='' && $code!='utf-8' ){
                 if (!$temp = @iconv('utf-8',$code.'//TRANSLIT','验证码')){
                     $temp = '验证码';
                 }
@@ -452,7 +442,7 @@ function parse_xml_img($str){
         return '['.$alt.']';
     }
 
-    if ( $alt<>'' ) {
+    if ( $alt!='' ) {
         $alt = ' alt="'.$alt.'"';
     }
     $src = fullurl($src);
@@ -470,11 +460,11 @@ function parse_xml_card($str){
     global $browser;
     $title = trim(get_xml($str,'title'));
     global $html_title;
-    if ( $title<>'' && ( !isset($html_title) || $html_title=='' ) ){
+    if ( $title!='' && ( !isset($html_title) || $html_title=='' ) ){
         $html_title = $title;
     }
     $onenterforward = get_xml($str,'onenterforward');
-    if ( $onenterforward <> '' ){
+    if ( $onenterforward != '' ){
         $onenterforward = $browser->cache_add('url',fullurl($onenterforward));
         return '<card title="'.$title.'" onenterforward="?'.$onenterforward.'">';
     }else{
@@ -496,9 +486,9 @@ function parse_xml_go($str){
     $xml_end = get_xml_end($str);
     $url = $browser->cache_add('url',fullurl($url));
     if ( $method == '' || strtolower($method) == 'get'){
-        return '<go href="?po='.$url.'" method="post"'.$xml_end.'>';
+        return '<go href="index.php?po='.$url.'" method="post"'.$xml_end.'>';
     }else{
-        return '<go href="?'.$url.'" method="post"'.$xml_end.'>';
+        return '<go href="index.php?'.$url.'" method="post"'.$xml_end.'>';
     }
 }
 
@@ -518,25 +508,25 @@ function parse_xml_form($str){
     if ( $browser->wap2wml==3 ){
         global $_form_url;
         $_form_url = $url;
-        if ( $enctype <> '' &&strtolower($enctype) == 'multipart/form-data' ){
+        if ( $enctype != '' &&strtolower($enctype) == 'multipart/form-data' ){
             global $cmd,$disk_upload_var,$form_diskipload;
             $disk_upload_var = '['.$browser->rand.'-DISK-UPLOAD-MODE-'.$browser->rand.']';
-            return '<form action="'.$url.'" enctype="'.$enctype.'" method="post" disksid="'.$disk_upload_var.'"/><!--'.$disk_upload_var.'-->';
+            return '<form action="/index.php'.$url.'" enctype="'.$enctype.'" method="post" disksid="'.$disk_upload_var.'"/><!--'.$disk_upload_var.'-->';
         }else{
             return '';
         }
     }
 
-    if ( $enctype <> '' ){
+    if ( $enctype != '' ){
         IF ( strtolower($enctype) == 'multipart/form-data' ){
             global $cmd,$disk_upload_var,$form_diskipload;
             $disk_upload_var = '['.$browser->rand.'-DISK-UPLOAD-MODE-'.$browser->rand.']';
-            return '<form action="'.$url.'" enctype="'.$enctype.'" method="post" disksid="'.$disk_upload_var.'"><!--'.$disk_upload_var.'-->';
+            return '<form action="/index.php'.$url.'" enctype="'.$enctype.'" method="post" disksid="'.$disk_upload_var.'"><!--'.$disk_upload_var.'-->';
         }else{
-            return '<form action="'.$url.'" enctype="'.$enctype.'" method="post">';
+            return '<form action="/index.php'.$url.'" enctype="'.$enctype.'" method="post">';
         }
     }else{
-        return '<form action="'.$url.'" method="post">';
+        return '<form action="/index.php'.$url.'" method="post">';
     }
 }
 
@@ -547,7 +537,7 @@ function parse_xml_textarea2input($str){
         return '';
     }
     global $browser,$mime;
-    if ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml' ){
+    if ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml' ){
         global $_form_input;
         $_form_input[$name] = '$('.$name.$browser->rand.')';
         $name .= $browser->rand;
@@ -572,7 +562,7 @@ function parse_xml_input($str){
     $type = strtolower(get_xml($str,'type'));
     $value = get_xml($str,'value');
     global $browser,$mime;
-    if ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml' ){
+    if ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml' ){
         if ( $type == 'hidden'){
             global $_form_input;
             $_form_input[$name] = $value;
@@ -585,7 +575,7 @@ function parse_xml_input($str){
             if ( $value=='' ){
                 $value = 'submit';
             }
-            $str  = '<anchor>'.$value.'<go href="'.$_form_url.'" method="post">';
+            $str  = '<anchor>'.$value.'<go href="/index.php'.$_form_url.'" method="post">';
             if ( $name ){
                 $str .= '<postfield name="'.$name.'" value="'.$value.'"/>';
             }
@@ -602,15 +592,15 @@ function parse_xml_input($str){
         $wml_form['input'][$name] = $value;
         return '[input='.$name.']';
     }
-    if ( $value<>'' ){
+    if ( $value!='' ){
         $value = ' value="'.$value.'"';
     }
-    if ( $type<>'' ){
+    if ( $type!='' ){
         $type = ' type="'.$type.'"';
     }
-    if ( $name<>'' ){
+    if ( $name!='' ){
         global $mime;
-        if ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml'){
+        if ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml'){
             global $_form_input;
             $_form_input[$name] = '$('.$name.$browser->rand.')';
             $name .= $browser->rand;
@@ -635,7 +625,7 @@ function parse_xml_a($str){
         return '<a href="'.$href.'"'.$xml_end.'>';
     }
 
-    if ( $href<>'' && $id){
+    if ( $href!='' && $id){
         return '<a id="'.$id.'"'.$xml_end.'>';
     }elseif ( $id ){
         $id = ' id="'.$id.'"';
@@ -709,7 +699,7 @@ function fix_wml_form($xml,$str){
         return '';
 
     }elseif ( $xml == '/anchor' ){
-        $str = '<form action="'.$wml_form['url'].'" method="post">';
+        $str = '<form action="/index.php'.$wml_form['url'].'" method="post">';
         foreach($wml_form['show_select'] as $name=>$val){
             $str .= $name.'：'.$val.'<br/>';
         }
@@ -771,7 +761,9 @@ function fix_css($str,$fix=true){
     if ( $browser->pic == 0 || $browser->pic == 1 || $browser->pic == 5 ){
         $str = preg_replace("@background:url\((.+?)\)@i", 'background:none', $str);
     }elseif( $browser->pic == 4 ){
-        $str = preg_replace_callback("/background:url\((.+?)\)/i", function($i){return 'background:url('.fullurl($i[1]).')';}, $str);
+        //traum
+        //$str = preg_replace("@background:url\((.+?)\)@ies", "'background:url('.fullurl('\\1').')'", $str);
+        $str = preg_replace_callback("/background:url\((.+?)\)/i",function ($i){return 'background:url('.fullurl($i[1]).')';}, $str);
     }else{
         $str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
     }

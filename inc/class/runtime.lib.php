@@ -25,6 +25,6 @@ class runtime{
 	}
 
 	function spent(){
-		return round(($this->StopTime - $this->StartTime) * 1000, 1);
+		return round(($this->StopTime - $this->StartTime) * 1000, 2);
 	}
 }

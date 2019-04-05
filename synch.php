@@ -1,14 +1,18 @@
 <?php
 /*
  *
- *	浏览器->历史
+ *	浏览器->同步
  *
  *	2011-1-14 @ jiuwap.cn
  *
  */
 
-define('DEFINED_JIUWAP','jiuwap.cn');
-include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+require 'inc/common.php';
+
+if ( !$b_set['switch']['synch'] ){
+	error_show('同步功能已经被关闭。');
+}
+
 $browser->user_login_check();
 
 $host = isset($_POST['host']) ? strtolower(trim($_POST['host'])) : null;
@@ -17,17 +21,17 @@ $pass = isset($_POST['pass']) ? trim($_POST['pass']) : null;
 
 $browser->template_top('数据同步');
 
-echo $b_set['webtitle'].'-同步(<a href="index.php?r='.$browser->rand.'">返回</a>)';
+echo $b_set['webtitle'].'-同步(<a href="/?r='.$browser->rand.'">返回</a>)';
 echo hr;
 if ( isset( $_GET['yes'] ) ){
-	$cover = isset($_POST['cover']) ? $_POST['cover'] : 1;
+	$cover = isset($_POST['cover']) ? $_POST['cover'] : 0;
 	if ( !$host || !$name || !$pass ){
 		echo '错误：表单内容不能为空！'.hr;
 	}elseif( $err = $browser->_user_name_check($name,$pass) ){
 		echo '错误：'.$err.hr;
-	}elseif( isset($_SERVER['SERVER_NAME']) && $host == $_SERVER['SERVER_NAME'] ){
+	}elseif( isset($_SERVER['SERVER_NAME']) && $host == $_SERVER['SERVER_NAME'] || ( isset($_SERVER['SERVER_PORT']) && $host == $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'] )){
 		echo '错误：无法同步本浏览器的数据'.hr;
-	}elseif( !@gethostbyname($host) ){
+	}elseif( !preg_match('/^[0-9a-zA-Z\_\-\:\.]*$/i',$host ) ){
 		echo '错误：域名解析错误'.hr;
 	}else{
 		quick_connect('api/?cmd=synch&host='.urlencode($host).'&pass='.urlencode($pass).'&name='.urlencode($name).'&cover='.urlencode($cover).'&key='.urlencode($_COOKIE['FREE']));
@@ -35,6 +39,7 @@ if ( isset( $_GET['yes'] ) ){
 		$browser->template_foot();
 	}
 }
+
 if ( $browser->template == 0 ){
 	echo '
 	<form action="synch.php?yes=yes" method="post">
@@ -63,5 +68,5 @@ if ( $browser->template == 0 ){
 	</go>同步</anchor>';
 }
 
-echo hr.'提示:(域名无需http://)本服务只是用于20110901(包括)以上版本的玖玩浏览器系统架设的网页浏览器,例如你想同步mm.jiuwap.cn的数据到本浏览器,那么你只需要输入域名“mm.jiuwap.cn”，再输入你在mm.jiuwap.cn的账号和密码，点同步即可将mm.jiuwap.cn的书签和COOKIES保存到本站。(如果数据过多可能需要等待几分钟才能完全同步，请不要多次同步，一面同步混乱导致数据丢失甚至损坏)';
+echo hr.'提示:(域名无需http://)本服务只是用于20110901(包括)以上版本的玖玩浏览器系统架设的网页浏览器,例如你想同步mm.jiuwap.cn的数据到本浏览器,那么你只需要输入域名“mm.jiuwap.cn”，再输入你在mm.jiuwap.cn的账号和密码，点同步即可将mm.jiuwap.cn的书签和COOKIES保存到本站。(如果数据过多可能需要等待几分钟才能完全同步，请不要多次同步，以免同步混乱导致数据丢失甚至损坏)';
 $browser->template_foot();

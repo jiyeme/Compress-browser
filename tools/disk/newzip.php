@@ -25,7 +25,7 @@ echo '<a href="disk.php?id=0'.$h.'">root</a>:\\'.$the_title.'<br/>';
 
 if ( isset($_GET['yes']) ){
 	if ( isset($a_mime[$type])) {
-		$mime = $a_mime[$type];
+		$mime = str_replace('.','_',$a_mime[$type]);
 		$title .= '.'.$a_mime[$type];
 	}
 	if ( $title == '' ){
@@ -44,17 +44,34 @@ if ( isset($_GET['yes']) ){
 		}else{
 			$the_save_file = time_().'_'.rand(10000,99999).'_'.$mime;
 			if ( $mime == 'gz' || $mime == 'tar.gz' ){
-				writefile($b_set['dfforever'].$the_save_file,gzencode(''));
+				$fsize = @(float)strlen(gzencode(''));
+				cloud_storage::write('disk_' . $the_save_file,gzencode(''));
+
 			}elseif( $mime == 'mrp' ){
-			include_once DIR.'inc/class/mrp.lib.php';
-				file_put_contents($b_set['dfforever'].'created_by_jiuwap_cn','created_by_jiuwap_cn');
-				mrp::pack($b_set['dfforever'].$the_save_file,array($b_set['dfforever'].'created_by_jiuwap_cn'),3,false,$b_set['dfforever']);
+				$tmpdir = cloud_storage::localname('tmp_' . rand(0,999) . time() . '/') ;
+				$tmpfile = cloud_storage::localname('temp_' . $the_save_file);
+				require_once ROOT_DIR.'inc/class/mrp.lib.php';
+				@mkdir($tmpdir);
+				@file_put_contents($tmpdir . 'created_by_jiuwap_cn','created_by_jiuwap_cn');
+				mrp::pack($tmpfile,array($tmpdir .'created_by_jiuwap_cn'),3,false,$tmpdir);
+				deldir($tmpdir);
+
+				$fsize = @(float)filesize($tmpfile);
+				cloud_storage::upload_temp($tmpfile,'disk_' . $the_save_file);
+
 			}elseif( $mime == 'jar' || $mime == 'zip' ){
-				include_once DIR.'inc/class/pclzip.lib.php';
-				file_put_contents('created_by_jiuwap_cn','created_by_jiuwap_cn');
-				$zip = new PclZip($b_set['dfforever'].$the_save_file);
-				$zip->create('created_by_jiuwap_cn');
-				@unlink('created_by_jiuwap_cn');
+				$tmpzip = cloud_storage::localname('temp_' . $the_save_file);
+				$tmpfile = cloud_storage::localname('created_by_jiuwap_cn');
+				require_once ROOT_DIR.'inc/class/pclzip.lib.php';
+				@file_put_contents($tmpfile,'created_by_jiuwap_cn');
+				$zip = new PclZip($tmpzip);
+				$zip->create($tmpfile);
+				@unlink($tmpfile);
+
+				$fsize = (float)filesize($tmpzip);
+				cloud_storage::upload_temp($tmpzip,'disk_' . $the_save_file);
+			}else{
+				$fsize = 0;
 			}
 
 			$arr = array(
@@ -62,7 +79,7 @@ if ( isset($_GET['yes']) ){
 				'uid'			=>	$disk['id'],
 				'mime'			=>	$mime,
 				'title'			=>	$title,
-				'size'			=>	@(float)filesize($b_set['dfforever'].$the_save_file),
+				'size'			=>	$fsize,
 				'file'			=>	$the_save_file,
 			);
 			if ( $disk['space_all']-$disk['space_use']-$arr['size'] <= 0){
@@ -72,14 +89,13 @@ if ( isset($_GET['yes']) ){
 			}else{
 				$id = $browser->db->insert('disk_file',$arr,true);
 				if ( $id ){
-					$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$arr['size'].' WHERE id='.$disk['id']);
+					disk_space_update(+$arr['size']);
 					echo '新建压缩档案['.$mime.']成功！<br/>查看<a href="disk.php?cmd=info&amp;id='.$id.'&amp;uid='.$up_id.$h.'">['.$title.']</a><br/>';
 					$browser->template_foot();
 				}else{
 					echo '错误：失败，未知错误。';
 				}
 			}
-			@unlink($b_set['dfforever'].$the_save_file);
 		}
 	}
 

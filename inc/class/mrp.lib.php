@@ -1,29 +1,11 @@
 <?php
-/*
+/**
+ * MRP(国产手机mtk手机应用软件)
  *
- *	MRP(国产手机mtk手机应用软件)
- *
- *	2011-4-19 @ jiuwap.cn
- *
- * 源代码由hu60.cn开发,本人(tianyiw)整合成php类,修正部分代码.
- *
- *
- *
- *	//得到MRP信息,返回数组型
- *	mrp::get($mrp_file)
- *
- *	//编辑MRP信息,返回逻辑值
- *	mrp::put($mrp_file,$info_array)
- *
- *	//解压MRP文件,返回逻辑值
- *	mrp::unpack($mrp_file,$unzip_dir)
- *
- *	//打包MRP文件,返回逻辑值
- *	mrp::pack($mrp_file,$file_array,$gzip_class,$mrp_template,要踢处的路径前缀)
- *
- *
+ * @package tianyiw
+ * @author hu60.cn && tianyiw
+ * @version 1.0
  */
-
 
 if (!defined('SYSFILECODE')){
 	//设置服务器文件名编码
@@ -32,8 +14,12 @@ if (!defined('SYSFILECODE')){
 
 class mrp{
 
-	//得到mrp信息
-	//mrp::get(MRP文件)
+	/**
+	 * 从mrp文件获取mrp信息
+	 *
+	 * @param string $f MRP文件地址
+	 * @return array 成功返回数组; 失败返回false
+	 */
 	static function get($f){
 		if ( !$f = @fopen($f,'rb') or fread($f,4) != 'MRPG'){
 			@fclose($f);
@@ -58,6 +44,7 @@ class mrp{
 		fseek($f,128,SEEK_SET);
 		$js=self::gb2u0(fread($f,64));//介绍
 		fclose($f);
+
 		return array(
 			'id'=>$id2.'&'.$id,
 			'ch'=>$ch,
@@ -69,9 +56,13 @@ class mrp{
 	}
 
 
-
-	//保存MRP信息
-	//mrp::put(MRP文件,数组)
+	/**
+	 * 向mrp文件写入mrp信息
+	 *
+	 * @param string $fn MRP文件地址
+	 * @param string $v MRP文件地址
+	 * @return boolen 成功返回true; 失败返回false
+	 */
 	static function put($fn,$v){
 		$v= $v + array(
 			'id'=>'1000&0',
@@ -107,8 +98,13 @@ class mrp{
 	}
 
 
-	//MRP解包
-	//mrp::unpack(MRP文件,解压目录)
+	/**
+	 * 解压缩mrp文件
+	 *
+	 * @param string $fname MRP文件地址
+	 * @param string $dir 解压缩到的目录
+	 * @return array 成功返回文件列表; 失败返回false
+	 */
 	static function unpack($fname,$dir){
 		if ( !$f=@fopen($fname,'rb') or fread($f,4) != 'MRPG'){
 			@fclose($f);
@@ -164,8 +160,16 @@ class mrp{
 	}
 
 
-	//打包
-	//mrp::pack(生成的mrp文件,打包文件列表,gzip压缩等级,mrp模板,要踢处的路径前缀)
+	/**
+	 * 将文件列表打包压缩为mrp文件
+	 *
+	 * @param string $mrp 生成的mrp文件地址
+	 * @param array $list 待打包的文件列表
+	 * @param int $gzip gzip压缩等级
+	 * @param string $f mrp模板;不填或false则默认模板
+	 * @param string $XiangDuiLuJing 要踢处的路径前缀
+	 * @return array 成功返回文件列表; 失败返回false
+	 */
 	static function pack($mrp,$list,$gzip=3,$f=false,$XiangDuiLuJing=false){
 		if($gzip<1 or $gzip>9){
 			$gzip=3;
@@ -180,7 +184,7 @@ class mrp{
 		}
 		foreach($list as &$a){
 			//@$a = iconv('utf-8',SYSFILECODE,$a);
-			if( !file_exists($a) ){
+			if( !file_Exists($a) ){
 				continue;
 			}
 			if ( !$tempgz_one = @file_get_contents($a) ){
@@ -192,6 +196,10 @@ class mrp{
 			}
 
 			$gztemp = 'gz_'.rand(0,99999).time().'_tmp';
+			if (class_exists('cloud_storage')){
+				$gztemp = cloud_storage::localname($gztemp);
+			}
+
 			$gz = gzopen($gztemp,'w'.$gzip);
 			gzwrite($gz,$tempgz_one);
 			gzclose($gz);
@@ -246,12 +254,25 @@ class mrp{
 
 
 
+	/**
+	 * 将chr(0)删除
+	 *
+	 * @param string $f 待处理字符串
+	 * @return string
+	 */
 	static private function gb2u0($f){
 		$f = str_replace(chr(0),'',$f);
 		return mb_convert_encoding($f,'utf-8',SYSFILECODE);
 	}
 
 
+	/**
+	 * 向末尾插入chr(0)
+	 *
+	 * @param string $f 待处理字符串
+	 * @param int $n 长度
+	 * @return string
+	 */
 	static private function u2gb0($f,$n){
 		$f = mb_convert_encoding($f,SYSFILECODE,'utf-8');
 		for($i = strlen($f); $i<=$n; $i++){
@@ -261,6 +282,13 @@ class mrp{
 		return $f;
 	}
 
+	/**
+	 * binadd
+	 *
+	 * @param string $f 待处理字符串
+	 * @param int $n 长度
+	 * @return string
+	 */
 	static private function binadd($f,$n){
 		$i = strlen($f);
 		while ( $i<$n ) {
@@ -271,6 +299,12 @@ class mrp{
 		return $f;
 	}
 
+	/**
+	 * 创建文件夹
+	 *
+	 * @param string $path 文件夹路径
+	 * @param int $mode 权限,默认为0777
+	 */
 	static function mkdirs($path, $mode = 0777){
 		$path .= '/';
 		$dirs = str_replace('\\','/',$path);
@@ -287,12 +321,19 @@ class mrp{
 			for ($cc=0; $cc <= $c; $cc++) {
 				$thispath .= $dirs[$cc].'/';
 			}
-			if (!file_exists($thispath)) {
+			if (!file_Exists($thispath)) {
 				@mkdir($thispath,$mode);
 			}
 		}
+		return true;
 	}
 
+	/**
+	 * hex2bin
+	 *
+	 * @param string $h 十六进制字符串
+	 * @return string 二进制内容
+	 */
 	static function hex2bin($h){
 		if (!is_string($h)) return null;
 		$r='';
@@ -302,6 +343,12 @@ class mrp{
 		return $r;
 	}
 
+	/**
+	 * gzdecode
+	 *
+	 * @param string $data
+	 * @return string
+	 */
 	static function gzdecode($data) {
 		$len = strlen($data);
 		if ($len < 18 || strcmp(substr($data,0,2),"\x1f\x8b")) {

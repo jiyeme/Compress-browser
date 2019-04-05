@@ -10,8 +10,8 @@ if ( isset($_GET['yes'])){
 	}elseif( checktruestr($title) == false ){
 		$error = '文件名不得使用标点符号！';
 	}else{
-		$dirs = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE oid='.$dir['oid'].' AND title="'.$title.'" AND uid='.$disk['id'].' AND id<>'.$id);
-		$file = $browser->db->fetch_first('SELECT id FROM `disk_file` WHERE oid='.$dir['oid'].' AND title="'.$title.'" AND uid='.$disk['id'].' AND id<>'.$id);
+		$dirs = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE oid='.$dir['oid'].' AND title="'.$title.'" AND uid='.$disk['id'].' AND id!='.$id);
+		$file = $browser->db->fetch_first('SELECT id FROM `disk_file` WHERE oid='.$dir['oid'].' AND title="'.$title.'" AND uid='.$disk['id'].' AND id!='.$id);
 		if ( $dirs || $file ){
 			$error = '文件(夹)已经存在！';
 		}else{

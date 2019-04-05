@@ -8,7 +8,7 @@ if ( isset($_GET['yes']) ){
 		echo '请正确输入文件夹名！';
 	}else{
 		$new_file = $__turl.'/'.FixSysUrlCode($dirname);
-		if ( !file_exists($new_file) && @mkdir($new_file) ){
+		if ( !file_Exists($new_file) && @mkdir($new_file) ){
 			echo '新建文件夹成功！<br/>';
 		}else{
 			echo '新建文件夹失败，可能存在同名文件(夹)！<br/>';

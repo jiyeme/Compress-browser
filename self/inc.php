@@ -51,8 +51,7 @@ Function top_wap($title,$refreshurl=''){
 	}else{
 		$refreshurl && $refreshurl = '<meta http-equiv="refresh" content="1;url='.$refreshurl.'"/>';
 		echo '<?xml version="1.0" encoding="utf-8"?>'
-		?>
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+		?><!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="application/vnd.wap.xhtml+xml;charset=utf-8"/>
@@ -61,9 +60,6 @@ Function top_wap($title,$refreshurl=''){
 </head><body>
 <?php
 	}
-    if ( defined('ML')  && ML ){
-        echo '<a href="?s=2"></a>';
-    }
 }
 
 Function foot_wap($exit=true){
@@ -78,15 +74,12 @@ Function foot_wap($exit=true){
 
 function exit_fix_html($exit=true){
 	$str = ob_get_contents();;
-	ob_clean();
+	@ob_clean();
 	$str = str_replace(array("\n","\r","\t"),'',$str);
 	$str = str_replace(' />','/>',$str);
-    if ( defined('ML')  && ML ){
-        $str = fxURL($str );
-    }
 	echo $str;
 	if ( $exit){
-		ob_end_flush();exit;
+		@ob_end_flush();exit;
 	}
 }
 

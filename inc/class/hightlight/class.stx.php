@@ -51,7 +51,7 @@ class STX{
 				'words'=>'o',
    		);
 
-	function STX($lang=''){
+	function __construct($lang=''){
 		if ($lang != '') $this->lang = strtolower($lang);
 		foreach ($this->ext_arr as $val) {
 			if(in_array($val,$this->lang_arr) == false) {
@@ -70,9 +70,11 @@ class STX{
 		}
 
 		foreach ($this->lang_arr as $lang) {
-			$root_path = preg_replace("/^(.*\/)(.*)$/","\\1",__FILE__);
-			$stx_file = $root_path.'/../'.$lang.'.stx';
-			if (file_exists($stx_file) == false) continue;
+			//$root_path = preg_replace("/^(.*\/)(.*)$/","\\1",__FILE__);
+			//$stx_file = $root_path.'/../'.$lang.'.stx';
+			$root_path = substr(__FILE__,0,-strlen(basename(__FILE__)));
+			$stx_file = $root_path.$lang.'.stx';
+			if (file_Exists($stx_file) == false) continue;
 			$line_arr = file($stx_file);
 			foreach ($line_arr as $val){
 				$val = trim($val);
@@ -193,7 +195,7 @@ class STX{
 			}
 		}elseif (in_array($char, array("\r","\n","\t"," "))){
 			$flag = 'SPACE';
-		}elseif (in_array($char, $this->stx[$lang]['DELIMITER'])){
+		}elseif (is_array($this->stx[$lang]['DELIMITER']) && in_array($char, $this->stx[$lang]['DELIMITER'])){
 			if (in_array($flag, array('WORD','VARIABLES1','VARIABLES2','VARIABLES3')) == false) $flag = 'DELIMITER';
 		}elseif ($this->status == 'SCRIPT' && $char == $this->stx[$lang]['PREFIX3']){
 			$flag = 'PREFIX3';
@@ -350,7 +352,7 @@ class STX{
 	}
 
 	function stx_file($file){
-		if (file_exists($file)) {
+		if (file_Exists($file)) {
 			if (empty($this->lang)) {
 				$ext = strtolower(trim(array_pop(explode(".",$file))));
 				if (empty($this->ext_arr[$ext]) == false) {
@@ -366,14 +368,14 @@ class STX{
 	}
 }
 
-function highlight_stx($file,$mime,$return = false){
-	if ( is_file($file) ){
+function highlight_stx($file,$mime,$return = false,$isfile = true){
+	if ( $isfile ){
 		$content = file_get_contents($file);
-		$content = str_replace("\t",' ',$content);
-		$content = getUTFString($content,$code);
 	}else{
-		$content = '文件丢失';
+		$content = $file;
 	}
+	$content = str_replace("\t",' ',$content);
+	$content = getUTFString($content,$code);
 	$ext_arr = array(
 			'py'=>'py',
 

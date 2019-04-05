@@ -3,16 +3,15 @@
  *
  *	浏览器->清理
  *
- *	2011-1-14 @ jiuwap.cn
+ *	2012/7/26 星期四 @ jiuwap.cn
  *
  */
 
-define('DEFINED_JIUWAP','jiuwap.cn');
-include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+require_once 'inc/common.php';
 $browser->user_login_check();
 
 $h = isset($_GET['h']) ? $_GET['h'] : '';
-if ( $h <> ''){
+if ( $h != ''){
 	$au = '&amp;h='.$h;
 }else{
 	$au = '';
@@ -70,12 +69,13 @@ if ( isset($_GET['cookie']) ){
 	}
 }else{
 	$browser->template_top('清理');
-	echo $b_set['webtitle'].'-清理<br/>返回:';
-	if ( $h<>'' ){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
+	echo '返回:';
+	if ( $h!='' ){
+		echo '<a href="/?h='.$h.'">网页</a>.';
 	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>.<a href="index.php">首页</a><br/>
-	-------------<br />
+	echo '<a href="/?m='.$h.'">菜单</a>.<a href="/">首页</a>';
+	echo hr;
+	echo '
 	<a href="clear.php?cookie=check&amp;h='.$h.'">清理COOKIES</a><br/>
 	<a href="clear.php?urls=check&amp;h='.$h.'">清理网址缓存</a><br/>
 	<a href="clear.php?pics=check&amp;h='.$h.'">清理图片缓存</a><br/>

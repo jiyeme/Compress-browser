@@ -6,43 +6,35 @@
  *	2011-1-14 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 class db{
-	function __construct($dbhost, $dbuser, $dbpw, $dbname, $prefix='', $dbcharset='utf8',$pconnect = null) {
+	private $curlink = null;
+
+	function __construct($dbhost, $dbuser, $dbpw, $dbname,  $dbcharset='utf8') {
 		$link = null;
-		$func = empty($pconnect) ? 'mysqli_connect' : 'mysqli_pconnect';
-		//logInfo('1111');
-		//$con=mysqli_connect("localhost","wrong_user","my_password","my_db"); 
-		if(!$link = $func($dbhost, $dbuser, $dbpw, $dbname)) {
-			$this->halt('连接失败');
+		if( !$link = @mysqli_connect($dbhost, $dbuser, $dbpw, $dbname) ) {
+			throw new Exception('mysqli:数据库连接失败',E_USER_ERROR);
 		} else {
 			$this->curlink = $link;
 			$dbcharset && mysqli_query($link, 'SET sql_mode="",NAMES "'.$dbcharset.'",CHARACTER SET '.$dbcharset.',CHARACTER_SET_RESULTS='.$dbcharset.',COLLATION_CONNECTION="'.$dbcharset.'_general_ci"');
-			if ($dbname){
-				if ( !$this->select_db($dbname) ){
-					$this->halt('数据库丢失',$dbname);
-				}
+			if ( !@$this->select_db($dbname) ){
+				throw new Exception('mysqli:打开数据表失败',E_USER_ERROR);
 			}
 		}
-		$this->prefix = $prefix;
 		$this->querynum = 0;
 	}
 
 	function delete($table,$where='', $limit = 0, $unbuffered = true){
-		$sql = 'DELETE FROM '.$this->table($table).($where ? " WHERE $where" : '').($limit ? " LIMIT $limit" : '');
+		$sql = 'DELETE FROM '.$table.($where ? " WHERE $where" : '').($limit ? " LIMIT $limit" : '');
 		return $this->query($sql, ($unbuffered ? 'UNBUFFERED' : ''));
 	}
 
-	function replace($table, $data , $where , $unbuffered = true){
-		$session = $this->fetch_first("SELECT id FROM {$this->table($table)} WHERE $where") ;
-		if ( !$session ){
-			$this->insert($table, $data, $unbuffered);
-		}else{
+	function replace($table,$data,$where,$unbuffered=true){
+		$d = $this->fetch_first("SELECT count(*) as is_exists FROM {$table} WHERE {$where}");
+		if ( $d['is_exists'] ){
 			$this->update($table, $data, $where, $unbuffered);
+		}else{
+			$this->insert($table, $data, $unbuffered);
 		}
 	}
 
@@ -54,7 +46,6 @@ class db{
 			$sql .= "`$k`='$v'";
 		}
 		$where && $sql .= " WHERE $where";
-		$table = $this->table($table);
 		return $this->query("UPDATE {$table} SET {$sql}",$unbuffered ? 'UNBUFFERED' : '');
 	}
 
@@ -69,21 +60,14 @@ class db{
 			$sql1 .= "`$k`";
 			$sql2 .= "'$v'";
 		}
-		$table = $this->table($table);
 		$return = $this->query("INSERT INTO {$table} ({$sql1}) VALUES ({$sql2})");
 		$return_insert_id && $return = $this->insert_id();
 		return $return;
 	}
 
-	function table($str){
-		return $this->prefix.$str;
+	static function connect($dbhost, $dbuser, $dbpw, $dbname,  $dbcharset='utf8') {
+		return new db($dbhost, $dbuser, $dbpw, $dbname,$dbcharset);
 	}
-
-	static function connect($dbhost, $dbuser, $dbpw, $dbname, $prefix='', $dbcharset='utf8',$pconnect = null) {
-		$DB = new db($dbhost, $dbuser, $dbpw, $dbname, $prefix, $dbcharset,$pconnect);
-		return $DB;
-	}
-
 
 	function select_db($dbname) {
 		return mysqli_select_db($this->curlink, $dbname);
@@ -122,11 +106,11 @@ class db{
 	}
 
 	function error() {
-		return isset($this->curlink) ? mysqli_error($this->curlink) : mysqli_error($this->curlink);
+		return isset($this->curlink) ? mysqli_error($this->curlink) : mysqli_error();
 	}
 
 	function errno() {
-		return isset($this->curlink) ? mysqli_errno($this->curlink) : mysqli_errno($this->curlink);
+		return isset($this->curlink) ? mysqli_errno($this->curlink) : mysqli_errno();
 	}
 
 	function result($query, $row = 0) {
@@ -174,11 +158,18 @@ class db{
             $sql = "\r\n".$sql;
         }
 		$str = $message."\r\n".$this->errno().$sql."\r\n".$this->error();
-        write_log(__FILE__,__line__,$str);
+		throw new Exception($str,E_USER_ERROR);
+        //write_log(__FILE__,__line__,$str);
+
 	}
 
 	function __destruct(){
 		$this->close();
+	}
+
+	public function escape_string($str){
+		$str = mysqli_escape_string($this->curlink,$str);
+		return $str;
 	}
 
 }

@@ -6,14 +6,10 @@
  *	2011-3-11 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 
 !defined('m') && header('location: /?r='.rand(0,999));
-$filename = $b_set['rini'].$browser->uid.'_'.sha1($url);
+
 $size = isset($header['CONTENT-LENGTH']) ? $header['CONTENT-LENGTH'] : -1;
 
 if ( isset($header['CONTENT-DISPOSITION']) ){
@@ -26,7 +22,7 @@ $file_name = getUTFString($file_name);
 
 $file_type = isset($header['CONTENT-TYPE']) ? $header['CONTENT-TYPE'] : 'application/octet-stream';
 $file = false;
-if ( false !== ($var = @file_get_contents($filename) ) ){
+if ( false !== ($var = $browser->temp_read('return_down',sha1($url)) ) ) {
 	if ( $var = @unserialize($var) ){
 		$arr = $browser->cache_get('pic',$var['id']);
 		if ( isset($arr['url']) && !empty($arr['url']) ){
@@ -45,11 +41,11 @@ if ( !$file ) {
 	$content['name']= $file_name;
 	$content['id']= $file;
 	$content['type']= $file_type;
-	$content['referer']= $http->referer();
-	$content['post'] = $http->private_post();
-	$content['header'] = $http->private_header();
-	$content['cookie'] = $http->private_cookie();
-	writefile($filename,serialize($content));
+	//$content['referer']= $http->referer();
+	$content['post'] = $http->_posts;
+	$content['header'] = $http->_headers;
+	$content['cookie'] = $http->_cookies;
+	$browser->temp_write('return_down',sha1($url),serialize($content));
 	unset($content);
 }
 
@@ -84,6 +80,6 @@ $html_size_old = -1;
 $html = ob_get_contents();
 $html_size_new = strlen($html);
 $the_history_key = $browser->history_add($html_title,$url,$html,$mime,$code,$html_size_new);
-ob_clean();
+@ob_clean();
 
-include DIR. 'parse/parse_foot.php';
+require ROOT_DIR.'parse/parse_foot.php';

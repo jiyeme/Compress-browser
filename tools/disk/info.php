@@ -23,9 +23,9 @@ echo '<img src="'.getico($dir['mime']).'" alt="'.$dir['mime'].'"/>'.$dir['title'
 
 $plugin = array('move','copy','mrpchange','unzip','docread','docread','txtread','phpread','picread','delete','toemail','rename','down');
 if ( in_array($do,$plugin) ){
-	include 'plugin/'.$do.'.php';
+	require ROOT_DIR.'tools/disk/plugin/'.$do.'.php';
 }else{
-	include 'plugin/default.php';
+	require ROOT_DIR.'tools/disk/plugin/default.php';
 }
 
 $browser->template_foot();

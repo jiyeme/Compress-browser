@@ -24,7 +24,7 @@ function FixPhpUrlCode($url){
 function ListDirFiles($dir){
 	//返回数组,0文件个数,1文件夹个数,2总大小,3文件列表
 	$arr = array(0,0,0,array());
-	if ( !file_exists($dir) || !is_dir($dir) ){
+	if ( !file_Exists($dir) || !is_dir($dir) ){
 		return $arr;
 	}
 	$opendir = opendir($dir);
@@ -56,9 +56,7 @@ function ListDirFiles($dir){
 }
 
 function checktruestr($str){
-	if ( substr($str,0,1) == '.' || substr($str,strlen($str)-1) == '.' ){
-		return false;
-	}elseif (preg_match("/[',:;*?~`!^<>]|\]|\[|\/|\\\|\"|\|/", $str)) {
+	if ( substr($str,0,1) == '.' || substr($str,strlen($str)-1) == '.' || preg_match("/[',:;*?~`!^<>]|\]|\[|\/|\\\|\"|\|/", $str)){
 		return false;
 	}else{
 		return true;
@@ -68,6 +66,8 @@ function checktruestr($str){
 function getico($str = false){
 	$where = 'tools/disk/image/';
 	$mime = array(
+		'java'	=>	'java.png',
+		'class'	=>	'java.png',
 		'3gp'	=>	'3gp.png',
 		'avi'	=>	'avi.png',
 		'bmp'	=>	'bmp.png',
@@ -76,7 +76,7 @@ function getico($str = false){
 		'exe'	=>	'exe.png',
 		'fla'	=>	'fla.png',
 		'gif'	=>	'gif.png',
-		'htaccess'	=>	'htaccess.png',
+		'htaccess'=>'htaccess.png',
 		'html'	=>	'htm.png',
 		'xhtml'	=>	'htm.png',
 		'wml'	=>	'wml.png',
@@ -124,6 +124,7 @@ function getico($str = false){
 		'7z'	=>	'zip.png',
 		'gz'	=>	'zip.png',
 		'tar'	=>	'zip.png',
+		'tar.gz'=>	'zip.png',
 	);
 	$sys = array('cldir.png','unkn.png','opdir.png');
 
@@ -188,16 +189,14 @@ function deldirs($id=0){
 		$size = 0;
 		while ( $file = $browser->db->fetch_array($qu) ){
             if ( $file['mime'] == 'zip' || $dir['mime'] == 'jar'){
-                deldir($b_set['dftemp'].md5($file['id'].'_u'));
+                deldir(ROOT_DIR.'temp/disk_temp/'.md5($file['id'].'_u'));
             }
-			@unlink($b_set['dfforever'].$file['file']);
+			cloud_storage::delete('disk_' . $file['file']);
 			$size += $file['size'];
 		}
-		if ( $size ){
-			$browser->db->query('UPDATE `disk_config` SET space_use=space_use-'.$size.' WHERE id='.$disk['id']);
-		}
+		disk_space_update(-$size);
 		$browser->db->delete('disk_file','oid='.$dir['id']);
-		if ( $dir['id'] <> $id){
+		if ( $dir['id'] != $id){
 			deldirs($dir['id']);
 		}
 	}
@@ -209,17 +208,17 @@ function deldirs($id=0){
 		$size = 0;
 		while ( $file = $browser->db->fetch_array($qu) ){
             if ( $file['mime'] == 'zip' || $file['mime'] == 'jar'){
-                deldir($b_set['dftemp'].md5($file['id'].'_u'));
+                deldir(ROOT_DIR.'/temp/disk_temp/'.md5($file['id'].'_u'));
             }
-			@unlink($b_set['dfforever'].$file['file']);
+			cloud_storage::delete('disk_' . $file['file']);
 			$size += $file['size'];
 		}
 		if ( $size ){
-			$browser->db->query('UPDATE `disk_config` SET space_use=space_use-'.$size.' WHERE id='.$disk['id']);
+			$browser->db->query('UPDATE `browser_users` SET space_use=space_use-'.$size.' WHERE id='.$disk['id']);
 		}
 		$browser->db->delete('disk_file','oid='.$dir['id']);
 		$browser->db->delete('disk_dir','id='.$dir['id']);
-		if ( $dir['id'] <> $id){
+		if ( $dir['id'] != $id){
 			deldirs($dir['id']);
 		}
 	}
@@ -244,16 +243,27 @@ function tree_select($select = false,$id = 0 ,$tree='└'){
 
 function init_disk(){
 	global $browser,$disk,$b_set;
-	$disk = $browser->db->fetch_first('SELECT id,space_all,space_use FROM `disk_config` WHERE username="my" AND password="'.$browser->uid.'"');
-	if ( !$disk ){
-		$disk = array();
-		$disk['username'] = 'my';
-		$disk['password'] = $browser->uid;
+	$disk = $browser->db->fetch_first('SELECT id,space_all,space_use FROM `browser_users` WHERE id='.$browser->uid);
+	if ( $disk['space_all'] == 0 ){
 		$disk['space_all'] = $b_set['dinit'];
 		$disk['space_use'] = 0;
-		$disk['id'] = $browser->db->insert('disk_config',$disk,true);
+		$browser->db->update('browser_users',$disk,'id='.$browser->uid);
 	}
 
+}
+
+function disk_space_update($size){
+	if ( $size == 0 ){
+		return;
+	}
+	global $disk,$browser;
+	if ( $disk['space_use']+$size > $disk['space_all'] ){
+		$browser->db->query('UPDATE `browser_users` SET space_use='.$disk['space_all'].' WHERE id='.$disk['id']);
+	}else if ( $disk['space_use']+$size < 0 ){
+		$browser->db->query('UPDATE `browser_users` SET space_use=0 WHERE id='.$disk['id']);
+	}else{
+		$browser->db->query('UPDATE `browser_users` SET space_use=space_use+'.$size.' WHERE id='.$disk['id']);
+	}
 }
 
 function get_short_file_mime($title,$mime=''){

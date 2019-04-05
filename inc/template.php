@@ -1,16 +1,109 @@
 <?php
-@include DIR.'set_config/version.php';
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
+/*
+ *
+ *	浏览器->简易模板
+ *
+ *	2012/7/26 星期四 @ jiuwap.cn
+ *
+ */
+
+$version = '0';
+@include 'set_config/version.php';
+
+Function top_wap2($title,$refreshurl='',$return=false,$code='utf-8',$time=1){
+	$refreshurl && $refreshurl = '<meta http-equiv="refresh" content="'.$time.';url='.$refreshurl.'"/>';
+    $str='<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="application/vnd.wap.xhtml+xml; charset='.$code.'"/>
+<meta http-equiv="Cache-Control" content="must-revalidate,no-cache"/>'.$refreshurl.'
+<title>'.$title.'</title><style>'.@file_get_contents('template/wap2.css').'</style>
+</head><body>';
+    if ( $code !='utf-8'){
+        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
+    }
+    if ( $return ){
+        return $str;
+    }else{
+        echo $str;
+        return null;
+    }
+}
+
+Function foot_wap2($exit=true,$return=false,$code='utf-8'){
+    $str = '</body></html>';
+    if ( $code !='utf-8'){
+        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
+    }
+    if ( $return ){
+        return $str;
+    }else{
+    	echo $str;
+    }
+	exit_fix_html($exit);
+    return null;
+}
+
+
+////////////////////////////////////////////////////////
+
+
+Function top_wap1($title,$refreshurl='',$return=false,$code='utf-8',$time=1){
+	header('Content-Type: text/vnd.wap.wml; charset='.$code);
+	if ($refreshurl){
+		$refreshurl = '<card id="main" title="'.$title.'" ontimer="'.$refreshurl.'"><timer value="'.$time.'"/>';
+	}else{
+		$refreshurl = '<card id="main" title="'.$title.'">';
+	}
+$str='<?xml version="1.0" encoding="'.$code.'"?>
+<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">
+<wml><head><meta http-equiv="Cache-Control" content="max-age=0"/>
+<meta http-equiv="Cache-Control" content="no-cache"/></head>'.$refreshurl.'<p>';
+    if ( $code !='utf-8'){
+        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
+    }
+    if ( $return ){
+        return $str;
+    }else{
+    	echo $str;
+        return null;
+    }
+}
+
+Function foot_wap1($exit=true,$return=false,$code='utf-8'){
+    $str = '</p></card></wml>';
+    if ( $code !='utf-8'){
+        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
+    }
+    if ( $return ){
+        return $str;
+    }else{
+    	echo $str;
+    }
+	exit_fix_html($exit);
+    return null;
+}
+
+function exit_fix_html($exit=true){
+	$str = ob_get_contents();;
+	@ob_clean();
+	$str = str_replace(array("\n","\r","\t"),'',$str);
+	$str = str_replace(' />','/>',$str);
+	echo $str;
+	if ( $exit){
+		@ob_end_flush();
+		exit();
+	}
 }
 
 function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	global $b_set,$browser,$version,$is_run_temp_top,$get_string;
 	$is_run_temp_top = false;
 	$jiuwap_template = @file_get_contents('template/'.$file.'.html');
-
+	if ( $jiuwap_template === false ){
+		$jiuwap_template = '错误：模板['.$file.'.html]丢失<hr/>';
+	}
 
 	$jiuwap_template = str_replace(array('<hr>','<hr/>','<hr />'),hr,$jiuwap_template);
 
@@ -31,18 +124,16 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	$jiuwap_template = preg_replace('/\[main_menu_help=(.*?)\]/i', "<a href=\"help.php?r=".$browser->rand."\">$1</a>",$jiuwap_template) ;
 	$jiuwap_template = preg_replace('/\[main_menu_synch=(.*?)\]/i', "<a href=\"synch.php?r=".$browser->rand."\">$1</a>",$jiuwap_template) ;
 	$jiuwap_template = preg_replace('/\[main_menu_index=(.*?)\]/i', "<a href=\"index.php?r=".$browser->rand."\">$1</a>",$jiuwap_template) ;
-
-	$jiuwap_template = preg_replace('/\[main_menu_index2=(.*?)\]/i', "<a href=\"http://f.10086.cn/p/p/i2iaya/?".$browser->template.";".$browser->login_key[1].";".$browser->login_key[2].":@".$_SERVER['SERVER_NAME']."\">$1</a>",$jiuwap_template) ;
-	$jiuwap_template = preg_replace('/\[main_menu_jiuwap=(.*?)\]/i', "<a href=\"http://3.bbs.jiuwap.cn\">$1</a>",$jiuwap_template) ;
+	$jiuwap_template = preg_replace('/\[main_menu_jiuwap=(.*?)\]/i', "<a href=\"http://jiuwap.cn\">$1</a>",$jiuwap_template) ;
 	$jiuwap_template = preg_replace('/\[main_menu_updatelogs=(.*?)\]/i', "<a href=\"self/new.php\">$1</a>",$jiuwap_template) ;
 	$jiuwap_template = preg_replace('/\[main_menu_update=(.*?)\]/i', "<a href=\"install\">$1</a>",$jiuwap_template) ;
 
 
+	//Traum
 	//strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace('/\[main_map_sites=(.*?)\]/ies', "template_main_map_sites('\\1')", $jiuwap_template);
 	strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace_callback('/\[main_map_sites=(.*?)\]/i', function($i){return template_main_map_sites($i[1]);}, $jiuwap_template);
-	
 	//strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace('/\[main_wap_select=(.*?)\|(.*?)\]/ies', "template_wap_select('\\1','\\2')", $jiuwap_template);
-	strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace_callback('/\[main_wap_select=(.*?)\|(.*?)\]/i',  function($i){return template_wap_select($i[1],$i[2]);}, $jiuwap_template);
+	strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace_callback('/\[main_wap_select=(.*?)\|(.*?)\]/i', function($i){return template_wap_select($i[1],$i[2]);}, $jiuwap_template);
 
 
 	$jiuwap_template = str_replace('[username]',$browser->uname,$jiuwap_template);
@@ -65,7 +156,6 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 		$jiuwap_template = str_replace('[get_string]',$get_string,$jiuwap_template);
 	}
 
-	//
 	global $h,$au;
 	if ( !isset($h) || $h === null ){
 		$h = '';
@@ -86,16 +176,17 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	$jiuwap_template = preg_replace('/\[menu_help=(.*?)\]/i', "<a href=\"help.php?h=".$h."\">$1</a>",$jiuwap_template) ;
 	$jiuwap_template = str_replace('[menu_form_url]',template_menu_form_url(),$jiuwap_template);
 
-	$jiuwap_template = preg_replace_callback('/\[title=(.*?)\]/i', function($i){return template___top($i[1]);}, $jiuwap_template);
+    //truam
+	//$jiuwap_template = preg_replace('/\[title=(.*?)\]/ies', "template___top('\\1')", $jiuwap_template);
+	$jiuwap_template = preg_replace_callback('/\[title=(.*?)\]/i', function ($i){return template___top($i[1]);}, $jiuwap_template);
 
 	if ( !$is_run_temp_top ){
-        $jiuwap_template = $browser->template_top('',$jump,true,'utf-8',$jump_wait) . $jiuwap_template;
-		//$browser->template_top('',$jump,$jump_wait);
-	}
-	if ( $Powered ){
-		$jiuwap_template .= '<br/>Powered By <a href="http://jiuwap.cn/">Jiuwap.cn</a>';
+		$browser->template_top('',$jump,$jump_wait);
 	}
 	echo $jiuwap_template;
+	if ( $Powered ){
+		echo 'Powered By <a href="http://jiuwap.cn/">Jiuwap.cn</a>';
+	}
 	$browser->template_foot();
 }
 
@@ -142,7 +233,8 @@ function template_main_historys(){
 	if ( $history == array() ){
 		return '无<br/>';
 	}else{
-		$echo = '';$i = count($history) - 5;
+		$echo = '';
+		$i = count($history) - 5;
 		foreach($history as $id=>$val){
 			if (--$i < 0){
 				$echo = '<a href="/?h='.$id.'">'.urldecode($val['title']).'</a><br/>'.$echo ;
@@ -175,13 +267,35 @@ function template_main_use_time(){
 }
 
 
+
+function template_quicklogin_form($K){
+	global $browser;
+	if ( $browser->template == 0 ){
+		return '<form action="login.php?key='.str_encrypt($K,'token').'&type=bangding&r='.$browser->rand.'" method="post">
+		账号：<input type="text" name="name" value="" /><br />
+		密码：<input type="password" name="pass" value="" /><br />
+		<input type="submit" value="快速绑定" />
+		</form>';
+	}else{
+		return '账号：<input name="name" type="text" value=""/><br/>
+		密码：<input name="pass" type="password" value=""/><br/>
+		<anchor>
+			<go href="login.php?key='.str_encrypt($K,'token').'&amp;type=bangding&amp;r='.$browser->rand.'" method="post">
+			<postfield name="name" value="$name" />
+			<postfield name="pass" value="$pass" />
+			</go>快速绑定</anchor><br/>';
+	}
+}
+
+
+
 function template_reg_form(){
 	global $browser;
 	if ( $browser->template == 0 ){
 		return '<form action="reg.php?yes=yes&r='.$browser->rand.'" method="post">
 		账号：<input type="text" name="name" value="" /><br />
 		密码：<input type="password" name="pass" value="" /><br />
-		<input type="submit" value="注册"/>
+		<input type="submit" value="注册" />
 		</form>';
 	}else{
 		return '账号：<input name="name" type="text" value=""/><br/>
@@ -190,8 +304,7 @@ function template_reg_form(){
 			<go href="reg.php?yes=yes&amp;r='.$browser->rand.'" method="post">
 			<postfield name="name" value="$name" />
 			<postfield name="pass" value="$pass" />
-			<postfield name="pass1" value="$pass1" />
-			</go>注册</anchor><br/><a href="login.php">';
+			</go>注册</anchor><br/>';
 	}
 }
 function template_login_form(){
@@ -229,10 +342,8 @@ function template_wap_select($a,$b){
 }
 
 
-
 function template_menu_form_url(){
-	global $browser;
-	global $url;
+	global $browser,$url;
 	if ( $browser->template == 0 ){
 		return '<form action="index.php" method="get">
 		网址：<input type="text" name="url" value="'.htmlspecialchars($url).'" />

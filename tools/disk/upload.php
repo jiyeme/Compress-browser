@@ -14,7 +14,7 @@ $do = isset($_GET['do']) ? $_GET['do'] : '';
 
 $browser->template_top('上传文件');
 $the_title = '';
-if ( $up_id<>0 ){
+if ( $up_id!=0 ){
 	$dir = $browser->db->fetch_first('SELECT title,oid FROM `disk_dir` WHERE uid='.$disk['id'].' AND id='.$up_id);
 	if ( !$dir ){
 		echo '错误：文件夹不存在！<br/>';
@@ -33,7 +33,7 @@ if ( $do == 'local') {
 		$error = false;
 		if ( !$_FILES || !isset($_FILES['file']['size']) ) {
 			$error = '您没有正确选择文件';
-		}elseif ( isset($_FILES['file']['error']) && $_FILES['file']['error']<>0 ) {
+		}elseif ( isset($_FILES['file']['error']) && $_FILES['file']['error']!=0 ) {
 			switch ( $_FILES['file']['error'] ){
 			case 1:
 				$error = '上传文件的过大';
@@ -83,10 +83,11 @@ if ( $do == 'local') {
 					'size'	=>	$strlen,
 					'file'	=>	$the_save_file,
 					);
-			if ( !@move_uploaded_file($_FILES['file']['tmp_name'],$b_set['dfforever'].$the_save_file) ){
+
+			if ( !cloud_storage::upload_temp($_FILES['file']['tmp_name'],'disk_' . $the_save_file) ){
 				$error = '未知错误#1！';
 			}elseif ( $id = $browser->db->insert('disk_file',$arr,true) ){
-				$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$arr['size'].' WHERE id='.$disk['id']);
+				disk_space_update(+$arr['size']);
 				echo '上传文件成功！<br/>';
 				echo '文件：'.$basename.'<br />';
 				echo '大小：'.bitsize($strlen).'<br />';
@@ -125,12 +126,15 @@ if ( $do == 'local') {
 			$error = 'URL地址不能为空';
 		}else{
 			$http = new httplib();
-			$referer && $http->referer(fix_r_n_t($referer));
-			if ( $http->open($url,30,5,true) == false ){
+			$http->set_dns($browser->dns_getAll());
+			$referer && $http->set_referer(fix_r_n_t($referer));
+			$http->set_timeout(30);
+			$http->set_location(3);
+			if ( $http->open($url) == false ){
 				$error = $http->error();
 			}else{
-				$url_A = $http->parse_url();
-				include DIR.'set_config/set_forbidhost.php';
+				$url_A = $http->get_urls();
+				include ROOT_DIR.'set_config/set_forbidhost.php';
 				if ( in_array(strtolower($url_A['host']),$b_set['forbid']) ){
 					$error = '禁止上传,目标站不合法,或嵌套浏览器#1';
 				}else{
@@ -139,7 +143,7 @@ if ( $do == 'local') {
 				if ( !$error && !$http->send() ){
 					$error = $http->error();
 				}elseif ( !$error ) {
-					$header = $http->header();
+					$header = $http->get_headers();
 					if ( !isset($header['STATUS']) || $header['STATUS'] != '200' ){
 						$error = '连接远程文件失败';
 					}elseif ( isset($header['CONTENT-LENGTH']) && $header['CONTENT-LENGTH'] > $b_set['dhttp'] ){
@@ -147,7 +151,7 @@ if ( $do == 'local') {
 					}elseif ( isset($header['CONTENT-LENGTH']) && $disk['space_all']-$disk['space_use']-$header['CONTENT-LENGTH'] <= 0){
 						$error = '网盘空间已满#1';
 					}else{
-						$content = $http->response();
+						$content = $http->get_body();
 						$strlen = strlen($content);
 						if ( $disk['space_all']-$disk['space_use']-$strlen <= 0){
 							$error = '网盘空间已满#2';
@@ -157,7 +161,7 @@ if ( $do == 'local') {
 							if ( isset($header['CONTENT-DISPOSITION']) ){
 								$basename = fix_disposition($header['CONTENT-DISPOSITION']);
 							}else{
-								$basename = fix_basename($http->url());
+								$basename = fix_basename($http->get_url());
 							}
 							$dir = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE oid='.$up_id.' AND title="'.$basename.'" AND uid='.$disk['id']);
 							$file = $browser->db->fetch_first('SELECT id FROM `disk_file` WHERE oid='.$up_id.' AND title="'.$basename.'" AND uid='.$disk['id']);
@@ -167,7 +171,7 @@ if ( $do == 'local') {
 							$mime = get_short_file_mime($basename);
 
 							$the_save_file = time_().'_'.rand(10000,99999);
-							if ( $mime <> ''){
+							if ( $mime != ''){
 								$the_save_file .= '_'.$mime;
 							}else{
 								$the_save_file .= '_unknown';
@@ -181,10 +185,10 @@ if ( $do == 'local') {
 								'size'	=>	$strlen,
 								'file'	=>	$the_save_file,
 							);
-							if ( !writefile($b_set['dfforever'].$the_save_file,$content) ){
+							if ( !@cloud_storage::write('disk_' . $the_save_file,$content) ){
 								$error = '未知错误#1';
 							}elseif ( $id = $browser->db->insert('disk_file',$arr,true) ){
-								$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$arr['size'].' WHERE id='.$disk['id']);
+								disk_space_update(+$arr['size']);
 								echo '上传文件成功！<br/>';
 								echo '文件：'.$basename.'<br />';
 								echo '大小：'.bitsize($strlen).'<br />';

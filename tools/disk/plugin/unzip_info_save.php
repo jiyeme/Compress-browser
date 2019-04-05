@@ -18,10 +18,10 @@ if ( isset($_GET['yes']) ){
 			$_name = rand(1,999999).'_'.$_name;
 		}
 		$the_save_file = time_().'_'.rand(10000,99999);
-		if ( $mime <> ''){
+		if ( $mime != ''){
 			$the_save_file .= '_'.$mime;
 		}
-		copy($__file,FixSysUrlCode($b_set['dfforever'].$the_save_file));
+		cloud_storage::upload($__turl,'disk_' . $the_save_file);
 		$arr = array(
 				'oid'	=>	$up_id,
 				'uid'	=>	$disk['id'],
@@ -32,8 +32,8 @@ if ( isset($_GET['yes']) ){
 				);
 		$ida = $browser->db->insert('disk_file',$arr,true);
 		if ( $ida ){
-			$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$size.' WHERE id='.$disk['id']);
-			echo '上传文件成功！<br/>查看<a href="disk.php?cmd=info&amp;id='.$ida.'&amp;uid='.$up_id.$h.'">['.$_name.']</a><br/>';
+			disk_space_update(+$size);
+			echo '转存到网盘成功！<br/>查看<a href="disk.php?cmd=info&amp;id='.$ida.'&amp;uid='.$up_id.$h.'">['.$_name.']</a><br/>';
 		}else{
 			echo '未知错误<br/>';
 		}

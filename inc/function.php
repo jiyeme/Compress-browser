@@ -1,18 +1,11 @@
 <?php
 /*
  *
+ *	浏览器->共用的函数库
  *
- *
- *	2011-3-12 @ jiuwap.cn
+ *	2012/7/26 星期四 @ jiuwap.cn
  *
  */
-!defined('DIR') && define('DIR',$_SERVER['DOCUMENT_ROOT'].'/');
-
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
 
 Apache2Nginx();
 
@@ -79,29 +72,16 @@ function error_show($title,$content=false){
 function error_book($title,$str){
 	global $browser,$h;
 	$browser->template_top($title);
-	echo $str.hr;
-	if ( $h<>''){
+	if ( $h!=''){
 		echo '返回:<a href="/?h='.$h.'">网页</a>.';
 	}else{
 		echo '返回:';
 	}
 	echo '<a href="/?m='.$h.'">菜单</a>.';
-	echo '<a href="copy.php?h='.$h.'">剪切板</a><br/>';
+	echo '<a href="copy.php?h='.$h.'">剪切板</a>';
+	echo hr;
+	echo $str;
 	$browser->template_foot();
-}
-
-function write_log($file,$line,$str='',$exit=true,$fff=''){
-    if ( $str ){
-        $str ="\r\n".$str;
-    }
-    $content = "line:{$line}\r\nfile:{$file}{$str}";
-
-	$content = str_replace("\r\n","\r\n<br/>",$content);
-	$str = "出错了：\r\n<br/>\r\n<br/>".$content;
-	$str .= "<hr/>Powered By <a href=\"http://jiuwap.cn\">jiuwap.cn</a>";
-	echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"/><title>错误</title></head>';
-	echo '<body><div>'.$str.'</div></body></html>';
-	exit();
 }
 
 
@@ -529,25 +509,26 @@ function get_file_mime($mime){
 	}
 }
 
-function unicode2utf8($str,$code=''){
-	$str = unescape_unicode($str);
-    return $str;
-}
 
-function unescape_unicode($str) {
+function unicode2utf8($str) {
 	$str = rawurldecode($str);
 	preg_match_all('/(?:%u.{4})|&#x.{4};|&#\d+;|.+/U', $str,$r);
 	$arr = $r[0];
 	foreach($arr as $k=>$v) {
 		if(substr($v,0,2) == "%u"){
-			$arr[$k] = iconv("UCS-2","UTF-8",pack("H4",substr($v,-4)));
+			//$arr[$k] = iconv("UCS-2","UTF-8",pack("H4",substr($v,-4)));
+			$arr[$k] = mb_convert_encoding(pack("H4",substr($v,-4)),"UTF-8","UCS-2");
 		}elseif(substr($v,0,3) == "&#x"){
-			$arr[$k] = iconv("UCS-2","UTF-8",pack("H4",substr($v,3,-1))) ;
+			//$arr[$k] = iconv("UCS-2","UTF-8",pack("H4",substr($v,3,-1))) ;
+			$arr[$k] = mb_convert_encoding(pack("H4",substr($v,3,-1)),"UTF-8","UCS-2");
 		}elseif(substr($v,0,2) == "&#"){
-			$arr[$k] = iconv("UCS-2","UTF-8",pack("n",substr($v,2,-1)));
+			//iconv ( string $in_charset , string $out_charset , string $str )
+			//mb_convert_encoding ( string $str , string $to_encoding [, mixed $from_encoding ] )
+			//$arr[$k] = iconv("UCS-2","UTF-8",pack("n",substr($v,2,-1)));
+			$arr[$k] = mb_convert_encoding(pack("n",substr($v,2,-1)),"UTF-8","UCS-2");
 		}
 	}
-	return join('',$arr);
+	return implode('',$arr);
 }
 
 
@@ -572,9 +553,14 @@ Function GetHost($h){
 }
 
 function qqagent_init(){
+	global $b_set;
+	if ( !$b_set['switch']['qqua'] ){
+		return ;
+	}
 	global $HTTP_Q_UA,$HTTP_Q_AUTH,$HTTP_Q_GUID;
 	$HTTP_Q_UA = $HTTP_Q_AUTH = $HTTP_Q_GUID = '' ;
-	$result = @file_get_contents(DIR.'temp/cache_forever/agent.php');
+
+	$result = @cloud_memcache::get('qq_ua');
 	if ( $result === false ){
 		$HTTP_Q = array();
 	}else{
@@ -586,7 +572,7 @@ function qqagent_init(){
 		}
 	}
 	if ( isset($_SERVER["HTTP_Q_UA"]) && isset($_SERVER["HTTP_Q_AUTH"]) ) {
-		if ( $_SERVER["HTTP_Q_UA"]<>$HTTP_Q_UA || $_SERVER["HTTP_Q_AUTH"]<>$HTTP_Q_AUTH ){
+		if ( $_SERVER["HTTP_Q_UA"]!=$HTTP_Q_UA || $_SERVER["HTTP_Q_AUTH"]!=$HTTP_Q_AUTH ){
 			$HTTP_Q_UA = isset($_SERVER["HTTP_Q_UA"]) ? db_safe_dropstr($_SERVER['HTTP_Q_UA']) : '' ;
 			$HTTP_Q_AUTH = isset($_SERVER["HTTP_Q_AUTH"]) ? db_safe_dropstr($_SERVER['HTTP_Q_AUTH']) : '' ;
 			$HTTP_Q_GUID = isset($_SERVER["HTTP_Q_GUID"]) ? db_safe_dropstr($_SERVER['HTTP_Q_GUID']) : '' ;
@@ -595,28 +581,35 @@ function qqagent_init(){
 				'HTTP_Q_AUTH'=>$HTTP_Q_AUTH,
 				'HTTP_Q_GUID'=>$HTTP_Q_GUID,
 			);
-			@file_put_contents(DIR.'temp/cache_forever/agent.php',serialize($HTTP_Q));
+			@cloud_memcache::set('qq_ua',serialize($HTTP_Q));
 		}
 	}
 	foreach($HTTP_Q as $k=>$v){
 		$$k = $v;
 	}
 }
-	function db_safe_dropstr($str){
-		$str = str_replace(array('"','\''),'',$str);
-		return $str;
-	}
+
+function db_safe_dropstr($str){
+	return str_replace(array('"','\''),'',$str);
+}
 
 function user_ip() {
-	if ( isset($_SERVER['HTTP_CLIENT_IP']) && !empty($_SERVER['HTTP_CLIENT_IP'])){
-		return $_SERVER['HTTP_CLIENT_IP'] ;
-	}elseif ( isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
-		return $_SERVER['HTTP_X_FORWARDED_FOR'] ;
-	}elseif ( isset($_SERVER['REMOTE_ADDR']) && !empty($_SERVER['REMOTE_ADDR'])){
-		return $_SERVER['REMOTE_ADDR'] ;
+	//该方法将首先获取HTTP_X_REAL_IP的IP地址，该IP地址是可以伪造的。
+	if ( !empty($_SERVER['HTTP_X_REAL_IP'])){
+		$ip = $_SERVER['HTTP_X_REAL_IP'] ;
+	}elseif ( !empty($_SERVER['HTTP_CLIENT_IP'])){
+		$ip = $_SERVER['HTTP_CLIENT_IP'] ;
+	}elseif ( !empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
+		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ;
+	}elseif ( !empty($_SERVER['REMOTE_ADDR'])){
+		$ip = $_SERVER['REMOTE_ADDR'] ;
 	}else{
-		return '127.0.0.1' ;
+		$ip = '127.0.0.1' ;
 	}
+	if ( $ip == '::1' || $ip <> '127.0.0.1' ){
+		$ip = '127.0.0.1' ;
+	}
+	return $ip;
 }
 
 function ubb_copy($str){
@@ -645,15 +638,6 @@ function ubb_copy_true($id){
 	}
 }
 
-function ob_gzip($content){
-	if ( !defined('no_ob_gzip') && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && !headers_sent() && extension_loaded('zlib') && strpos($_SERVER['HTTP_ACCEPT_ENCODING'],'gzip')!==false ){
-		$content = gzencode($content,9);
-		header('Content-Encoding: gzip');
-		header('Vary: Accept-Encoding');
-		header('Content-Length: '.strlen($content));
-	}
-	return $content;
-}
 
 function str_pos($str,$start,$end){
 	$i = stripos($str,$start);
@@ -675,7 +659,7 @@ function fix_r_n_t($str){
 	return $str;
 }
 
-function fixchinese($str){
+function str_fix_chinese($str){
 	@$str = iconv('utf-8','utf-8//IGNORE', $str);
 	return $str;
 }
@@ -700,51 +684,12 @@ function deldir($dir,$deldir=true) {
 	}
 }
 
-function IsWap2(){
-	static $result = null;
-	if ( $result !== null ){
-		return $result;
-	}
-	$ua = isset($_SERVER['HTTP_ACCEPT']) ? '.'.strtolower($_SERVER['HTTP_ACCEPT']) : false;
-	if ( $ua && (
-		strpos($ua,'text/html') ||
-		strpos($ua,'application/xhtml+xml')
-		)){
-		$result= true;
-	}else{
-		$ua = isset($_SERVER['HTTP_USER_AGENT']) ? '.'.$_SERVER['HTTP_USER_AGENT'] : false;
-		if (
-			$ua && (
-			stripos($ua,'MSIE') ||
-			stripos($ua,'Windows') ||
-			stripos($ua,'Mozilla') ||
-			stripos($ua,'Symbian') ||
-			stripos($ua,'iPhone') ||
-			stripos($ua,'KHTML') ||
-			stripos($ua,'Chrome') ||
-			stripos($ua,'ucweb') ||
-			stripos($ua,'smartphone') ||
-			stripos($ua,'blackberry') ||
-			stripos($ua,'opera') ||
-			stripos($ua,'AppleWebKit')
-			)){
-			$result= true;
-		}else{
-			$result= false;
-		}
-	}
-	return $result;
-}
 
 function getUTFString($string,&$code=''){
 	$code = mb_detect_encoding($string, array('ASCII','UTF-8','GB2312','GBK','BIG5'));
 	return @mb_convert_encoding($string, 'utf-8', $code);
 }
 
-
-function writefile($file,$content){
-	return file_put_contents($file,$content);
-}
 
 function bitsize($num) {
 	if (!preg_match("/^[0-9]+$/", $num)){
@@ -882,17 +827,6 @@ function fix_basename($str){
 	return fix_localbase($str);
 }
 
-function set_cache_forever($sid,$content){
-	writefile(DIR.'temp/cache_forever/'.fix_localbase(sha1($sid)),$content);
-}
-
-function get_cache_forever($sid,$content=null){
-	$sid = DIR.'temp/cache_forever/'.fix_localbase(sha1($sid));
-	if ( file_exists($sid) ){
-		@$content = file_get_contents($sid);
-	}
-	return $content;
-}
 
 function str_encrypt($str,$code=''){
 	if ( $code == ''){
@@ -915,42 +849,39 @@ function str_decrypt($str,$code=''){
 
 function num2short($num = 0){
 	static $arr = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-	if ( $num <= 61 ){
+	if ( $num < 62 ){
 		return $arr[$num];
 	}elseif( $num <= 3905 ){
 		$int = intval(floor($num/62));
 		$mod = $num - $int * 62;
 		return $arr[$int - 1] . $arr[$mod];
 	}else{
-		$int = floor($num/3905);
+		throw new Exception('暂时只支持小于3905',E_USER_ERROR);
+		/*$int = floor($num/3905);
 		$mod = $num - $int * 3905;
-		return num2short($int-1) . num2short($mod+62);
+		return num2short($int-1) . num2short($mod+62);*/
 	}
 }
 
 function short2num($str){
 	static $arr = array('0'=>'0','1'=>'1','2'=>'2','3'=>'3','4'=>'4','5'=>'5','6'=>'6','7'=>'7','8'=>'8','9'=>'9','a'=>'10','b'=>'11','c'=>'12','d'=>'13','e'=>'14','f'=>'15','g'=>'16','h'=>'17','i'=>'18','j'=>'19','k'=>'20','l'=>'21','m'=>'22','n'=>'23','o'=>'24','p'=>'25','q'=>'26','r'=>'27','s'=>'28','t'=>'29','u'=>'30','v'=>'31','w'=>'32','x'=>'33','y'=>'34','z'=>'35','A'=>'36','B'=>'37','C'=>'38','D'=>'39','E'=>'40','F'=>'41','G'=>'42','H'=>'43','I'=>'44','J'=>'45','K'=>'46','L'=>'47','M'=>'48','N'=>'49','O'=>'50','P'=>'51','Q'=>'52','R'=>'53','S'=>'54','T'=>'55','U'=>'56','V'=>'57','W'=>'58','X'=>'59','Y'=>'60','Z'=>'61');
-    $a = strlen($str);
-    if ( $a <= 1 ){
-        if ( isset($arr[$str]) ){
-            return $arr[$str];
-        }else{
-            return 0;
-        }
-    }elseif ( $a == 2 ){
-        if ( isset($arr[$str[0]]) && isset($arr[$str[1]]) ){
-            $x = (($arr[$str[0]] + 1) * 62 + $str[1]);
-            if ( num2short($x) != $str){
-                $x = (($arr[$str[0]] + 1) * 62 + $str[1] + $arr[$str[1]] );
-            }
-            return $x;
-        }else{
-            return 0;
-        }
-    }else{
-        exit('No.!!!short2num');
-    }
+	$num = 0;
+	$n = strlen($str);
+	if ( $n <= 0 ){
+		throw new Exception('参数不能为空',E_USER_ERROR);
+	}else if ( $n > 2 ){
+		throw new Exception('暂时只支持2位字符的转换',E_USER_ERROR);
+	}
+
+	for($i=0;$i<$n;$i++){
+		$num += pow(62,$n-$i-1) * $arr[$str[$i]] ;
+	}
+	if ( $n > 1 ){
+		$num += 62;
+	}
+	return $num;
 }
+
 function getshortname($id){
     return ceil(($id+1)/250);
 }
@@ -959,188 +890,89 @@ function getshortname_history($id){
     return ceil(($id+1)/5);
 }
 
-function ImageCreateFromBMP($filename){
-	if ( !$f1 = @fopen ($filename ,'rb')){
-		return FALSE ;
-	}
-	$FILE = unpack("vfile_type/Vfile_size/Vreserved/Vbitmap_offset", fread ($f1,14));
-	if ($FILE['file_type'] != 19778 ){
-		return FALSE ;
-	}
-	$BMP = unpack('Vheader_size/Vwidth/Vheight/vplanes/vbits_per_pixel'. '/Vcompression/Vsize_bitmap/Vhoriz_resolution'. '/Vvert_resolution/Vcolors_used/Vcolors_important', fread ($f1 ,40 ));
-	$BMP['colors'] = pow (2 ,$BMP['bits_per_pixel']);
-	if ($BMP['size_bitmap'] == 0 ){
-		$BMP['size_bitmap'] = $FILE ['file_size'] - $FILE ['bitmap_offset'];
-	}
-	unset($FILE);
-	$BMP['bytes_per_pixel'] = $BMP['bits_per_pixel']/8 ;
-	$BMP['bytes_per_pixel2'] = ceil ($BMP['bytes_per_pixel']);
-	$BMP['decal'] = ($BMP['width']*$BMP['bytes_per_pixel']/4 );
-	$BMP['decal'] -= floor ($BMP['width']*$BMP['bytes_per_pixel']/4 );
-	$BMP['decal'] = 4 -(4 *$BMP['decal']);
-	if ($BMP['decal'] == 4 ){
-		$BMP['decal'] = 0 ;
-	}
-	$PALETTE = array ();
-	if ($BMP['colors'] < 16777216 ){
-		$PALETTE = unpack ('V'. $BMP['colors'], fread($f1 ,$BMP['colors']*4 ));
-	}
-	$IMG = fread ($f1 ,$BMP['size_bitmap']);
-	fclose ($f1 );
-	$VIDE = chr (0);
-	$res = imagecreatetruecolor($BMP['width'],$BMP['height']);
-	$P = 0 ;
-	$Y = $BMP['height']-1 ;
-	while ($Y >= 0 ){
-		$X =0 ;
-		while ($X < $BMP['width']){
-			if ($BMP['bits_per_pixel'] == 24 ){
-				$COLOR = unpack ("V",substr ($IMG ,$P ,3 ). $VIDE );
-			}elseif ($BMP['bits_per_pixel'] == 16 ){
-				$COLOR = unpack ("n",substr ($IMG ,$P ,2 ));
-				$COLOR [1] = $PALETTE [$COLOR [1]+1];
-			} elseif ($BMP['bits_per_pixel'] == 8 ){
-				$COLOR = unpack ("n",$VIDE.substr ($IMG ,$P ,1 ));
-				$COLOR [1] = $PALETTE [$COLOR [1]+1];
-			} elseif ($BMP['bits_per_pixel'] == 4 ){
-				$COLOR = unpack ("n",$VIDE.substr ($IMG ,floor ($P ),1 ));
-				if(($P *2 )%2 == 0 ){
-					$COLOR [1] = ($COLOR [1] >> 4 ) ;
-				}else{
-					$COLOR [1] = ($COLOR [1] & 0x0F );
-				}
-				$COLOR [1] = $PALETTE [$COLOR [1]+1];
-			} elseif ($BMP['bits_per_pixel'] == 1 ){
-				$COLOR = unpack ("n",$VIDE.substr ($IMG ,floor ($P ),1 ));
-				if (($P *8 )%8 == 0 ){
-					$COLOR [1] = $COLOR [1] >>7 ;
-				}elseif (($P *8 )%8 == 1 ){
-					$COLOR [1] = ($COLOR [1] & 0x40 )>>6 ;
-				}elseif (($P *8 )%8 == 2 ){
-					$COLOR [1] = ($COLOR [1] & 0x20 )>>5 ;
-				}elseif (($P *8 )%8 == 3 ){
-					$COLOR [1] = ($COLOR [1] & 0x10 )>>4 ;
-				}elseif (($P *8 )%8 == 4 ){
-					$COLOR [1] = ($COLOR [1] & 0x8 )>>3 ;
-				}elseif (($P *8 )%8 == 5 ){
-					$COLOR [1] = ($COLOR [1] & 0x4 )>>2 ;
-				}elseif (($P *8 )%8 == 6 ){
-					$COLOR [1] = ($COLOR [1] & 0x2 )>>1 ;
-				}elseif (($P *8 )%8 == 7 ){
-					$COLOR [1] = ($COLOR [1] & 0x1 );
-				}
-				$COLOR [1] = $PALETTE [$COLOR [1]+1];
-			} else{
-				return FALSE ;
-			}
-			imagesetpixel($res ,$X ,$Y ,$COLOR [1]);
-			$X ++;
-			$P += $BMP['bytes_per_pixel'];
+if (!function_exists('ImageCreateFromBMP')){
+	function ImageCreateFromBMP($filename){
+		if ( !$f1 = @fopen ($filename ,'rb')){
+			return FALSE ;
 		}
-		$Y --;
-		$P +=$BMP['decal'];
-	}
-	return $res ;
-}
-
-Function top_wap2($title,$refreshurl='',$return=false,$code='utf-8',$time=1){
-	$refreshurl && $refreshurl = '<meta http-equiv="refresh" content="'.$time.';url='.$refreshurl.'"/>';
-    $str='<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="application/vnd.wap.xhtml+xml; charset='.$code.'"/>
-<meta http-equiv="Cache-Control" content="must-revalidate,no-cache"/>'.$refreshurl.'
-<title>'.$title.'</title><style>'.file_get_contents(DIR.'template/wap2.css').'</style>
-</head><body>';
-    if ( defined('ML')  && ML ){
-        $str .= '<a href="?s=2"></a>';
-    }
-    if ( $code <>'utf-8'){
-        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
-    }
-    if ( $return ){
-        return $str;
-    }else{
-        echo $str;
-        return null;
-    }
-}
-
-Function foot_wap2($exit=true,$return=false,$code='utf-8'){
-    if ( defined('ML')  && ML ){
-        fxURL2();
-    }
-    $str = '</body></html>';
-    if ( $code <>'utf-8'){
-        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
-    }
-    if ( $return ){
-        return $str;
-    }else{
-    	echo $str;
-    }
-	exit_fix_html($exit);
-    return null;
-}
-
-
-////////////////////////////////////////////////////////
-
-
-Function top_wap1($title,$refreshurl='',$return=false,$code='utf-8',$time=1){
-	header('Content-Type: text/vnd.wap.wml; charset='.$code);
-	if ($refreshurl){
-		$refreshurl = '<card id="main" title="'.$title.'" ontimer="'.$refreshurl.'"><timer value="'.$time.'"/>';
-	}else{
-		$refreshurl = '<card id="main" title="'.$title.'">';
-	}
-$str='<?xml version="1.0" encoding="'.$code.'"?>
-<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">
-<wml><head><meta http-equiv="Cache-Control" content="max-age=0"/>
-<meta http-equiv="Cache-Control" content="no-cache"/></head>'.$refreshurl.'<p>';
-    if ( defined('ML')  && ML ){
-        $str .= '<a href="?s=2"></a>';
-    }
-    if ( $code <>'utf-8'){
-        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
-    }
-    if ( $return ){
-        return $str;
-    }else{
-    	echo $str;
-        return null;
-    }
-}
-
-Function foot_wap1($exit=true,$return=false,$code='utf-8'){
-    if ( defined('ML')  && ML ){
-        fxURL2();
-    }
-
-    $str = '</p></card></wml>';
-    if ( $code <>'utf-8'){
-        @$str = iconv('utf-8',$code.'//TRANSLIT', $str);
-    }
-
-    if ( $return ){
-        return $str;
-    }else{
-    	echo $str;
-    }
-	exit_fix_html($exit);
-    return null;
-}
-
-
-function exit_fix_html($exit=true){
-	$str = ob_get_contents();;
-	ob_clean();
-	$str = str_replace(array("\n","\r","\t"),'',$str);
-	$str = str_replace(' />','/>',$str);
-	echo $str;
-	if ( $exit){
-		ob_end_flush();exit;
+		$FILE = unpack("vfile_type/Vfile_size/Vreserved/Vbitmap_offset", fread ($f1,14));
+		if ($FILE['file_type'] != 19778 ){
+			return FALSE ;
+		}
+		$BMP = unpack('Vheader_size/Vwidth/Vheight/vplanes/vbits_per_pixel'. '/Vcompression/Vsize_bitmap/Vhoriz_resolution'. '/Vvert_resolution/Vcolors_used/Vcolors_important', fread ($f1 ,40 ));
+		$BMP['colors'] = pow (2 ,$BMP['bits_per_pixel']);
+		if ($BMP['size_bitmap'] == 0 ){
+			$BMP['size_bitmap'] = $FILE ['file_size'] - $FILE ['bitmap_offset'];
+		}
+		unset($FILE);
+		$BMP['bytes_per_pixel'] = $BMP['bits_per_pixel']/8 ;
+		$BMP['bytes_per_pixel2'] = ceil ($BMP['bytes_per_pixel']);
+		$BMP['decal'] = ($BMP['width']*$BMP['bytes_per_pixel']/4 );
+		$BMP['decal'] -= floor ($BMP['width']*$BMP['bytes_per_pixel']/4 );
+		$BMP['decal'] = 4 -(4 *$BMP['decal']);
+		if ($BMP['decal'] == 4 ){
+			$BMP['decal'] = 0 ;
+		}
+		$PALETTE = array ();
+		if ($BMP['colors'] < 16777216 ){
+			$PALETTE = unpack ('V'. $BMP['colors'], fread($f1 ,$BMP['colors']*4 ));
+		}
+		$IMG = fread ($f1 ,$BMP['size_bitmap']);
+		fclose($f1);
+		$VIDE = chr (0);
+		$res = imagecreatetruecolor($BMP['width'],$BMP['height']);
+		$P = 0 ;
+		$Y = $BMP['height']-1 ;
+		while ($Y >= 0 ){
+			$X =0 ;
+			while ($X < $BMP['width']){
+				if ($BMP['bits_per_pixel'] == 24 ){
+					$COLOR = unpack ("V",substr ($IMG ,$P ,3 ). $VIDE );
+				}elseif ($BMP['bits_per_pixel'] == 16 ){
+					$COLOR = unpack ("n",substr ($IMG ,$P ,2 ));
+					$COLOR [1] = $PALETTE [$COLOR [1]+1];
+				} elseif ($BMP['bits_per_pixel'] == 8 ){
+					$COLOR = unpack ("n",$VIDE.substr ($IMG ,$P ,1 ));
+					$COLOR [1] = $PALETTE [$COLOR [1]+1];
+				} elseif ($BMP['bits_per_pixel'] == 4 ){
+					$COLOR = unpack ("n",$VIDE.substr ($IMG ,floor ($P ),1 ));
+					if(($P *2 )%2 == 0 ){
+						$COLOR [1] = ($COLOR [1] >> 4 ) ;
+					}else{
+						$COLOR [1] = ($COLOR [1] & 0x0F );
+					}
+					$COLOR [1] = $PALETTE [$COLOR [1]+1];
+				} elseif ($BMP['bits_per_pixel'] == 1 ){
+					$COLOR = unpack ("n",$VIDE.substr ($IMG ,floor ($P ),1 ));
+					if (($P *8 )%8 == 0 ){
+						$COLOR [1] = $COLOR [1] >>7 ;
+					}elseif (($P *8 )%8 == 1 ){
+						$COLOR [1] = ($COLOR [1] & 0x40 )>>6 ;
+					}elseif (($P *8 )%8 == 2 ){
+						$COLOR [1] = ($COLOR [1] & 0x20 )>>5 ;
+					}elseif (($P *8 )%8 == 3 ){
+						$COLOR [1] = ($COLOR [1] & 0x10 )>>4 ;
+					}elseif (($P *8 )%8 == 4 ){
+						$COLOR [1] = ($COLOR [1] & 0x8 )>>3 ;
+					}elseif (($P *8 )%8 == 5 ){
+						$COLOR [1] = ($COLOR [1] & 0x4 )>>2 ;
+					}elseif (($P *8 )%8 == 6 ){
+						$COLOR [1] = ($COLOR [1] & 0x2 )>>1 ;
+					}elseif (($P *8 )%8 == 7 ){
+						$COLOR [1] = ($COLOR [1] & 0x1 );
+					}
+					$COLOR [1] = $PALETTE [$COLOR [1]+1];
+				} else{
+					return FALSE ;
+				}
+				imagesetpixel($res ,$X ,$Y ,$COLOR [1]);
+				$X ++;
+				$P += $BMP['bytes_per_pixel'];
+			}
+			$Y --;
+			$P +=$BMP['decal'];
+		}
+		return $res ;
 	}
 }
 
@@ -1162,18 +994,134 @@ function getJson($data){
 }
 
 function quick_connect($url){
-	$fp = @fsockopen('localhost',80);
-	if ( !$fp ){
-		//break;
-		return;
+	if ( !isset($_SERVER['SERVER_PORT'])){
+		$_SERVER['SERVER_PORT'] = '80';
+	}
+	if ( !isset($_SERVER['SERVER_ADDR'])){
+		$_SERVER['SERVER_ADDR'] = '127.0.0.1';
 	}
 	$out = "GET /{$url} HTTP/1.1\r\n";
 	$out .= "Host: {$_SERVER['SERVER_NAME']}\r\n";
 	$out .= "Connection: Close\r\n\r\n";
+
+	//echo $_SERVER['SERVER_ADDR'],$_SERVER['SERVER_PORT'];
+	$fp = @fsockopen($_SERVER['SERVER_ADDR'],$_SERVER['SERVER_PORT']);
+	if ( $fp === false  ){
+		return;
+	}
+	//echo $out;exit;
 	@fwrite($fp, $out);
 	@fclose($fp);
 }
-function logInfo($msg)
+
+function file_get_content($url){
+	if( function_exists('curl_init') ) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_URL, $url);
+		$result =  curl_exec($ch);
+		curl_close($ch);
+		return $result;
+	}else{
+		return file_get_contents($url);
+	}
+}
+
+function IsWap() {
+    if (isset($_SERVER['HTTP_VIA']) ||
+		isset($_SERVER['HTTP_X_NOKIA_CONNECTION_MODE']) ||
+		isset($_SERVER['HTTP_X_UP_CALLING_LINE_ID']) ||
+		isset($_SERVER['HTTP_ACCEPT']) && strpos(strtolower($_SERVER['HTTP_ACCEPT']),'vnd.wap.wml') !== false ||
+		empty($_SERVER['HTTP_USER_AGENT'])
+		) return true;
+
+	$Browser = trim($_SERVER['HTTP_USER_AGENT']);
+
+	$Wap = Array('noki','eric','wapi','mc21','aur','r380','up.B','winw',
+				'upg1','upsi','qwap','jigs','java','alca','mits','mot-',
+				'my S','wapj','fetc','alav','wapa','oper');
+
+	return in_array(Substr($Browser,0,4),$Wap);
+}
+
+function IsWap2(){
+	static $result = null;
+	if ( $result !== null ){
+		return $result;
+	}
+	$ua = isset($_SERVER['HTTP_ACCEPT']) ? '.'.strtolower($_SERVER['HTTP_ACCEPT']) : false;
+	if ( $ua && (
+		strpos($ua,'text/html') ||
+		strpos($ua,'application/xhtml+xml')
+		)){
+		$result= true;
+	}else{
+		$ua = isset($_SERVER['HTTP_USER_AGENT']) ? '.'.$_SERVER['HTTP_USER_AGENT'] : false;
+		if (
+			$ua && (
+				stripos($ua,'MSIE') ||
+				stripos($ua,'Windows') ||
+				stripos($ua,'Mozilla') ||
+				stripos($ua,'Symbian') ||
+				stripos($ua,'iPhone') ||
+				stripos($ua,'KHTML') ||
+				stripos($ua,'Chrome') ||
+				stripos($ua,'ucweb') ||
+				stripos($ua,'smartphone') ||
+				stripos($ua,'blackberry') ||
+				stripos($ua,'opera') ||
+				stripos($ua,'AppleWebKit')
+			)){
+			$result= true;
+		}else{
+			$result= false;
+		}
+	}
+	return $result;
+}
+
+
+function set_Cookie($name, $value='', $maxage=0, $path='',$domain='', $secure=false, $HTTPOnly=false){
+	return Setcookie($name,$value,$maxage,$path,$domain,$secure,$HTTPOnly);
+
+	/*以下方法有点问题*/
+	if(is_array($name)){
+		list($k,$v) = each($name);
+			$name = $k.'['.$v.']';
+	}
+	$ob = ini_get('output_buffering');
+	// Abort the method if headers have already been sent, except when output buffering has been enabled
+	if ( headers_sent() && (bool) $ob === false || strtolower($ob) == 'off' ) return false;
+	if ( !empty($domain) ) {
+		// Fix the domain to accept domains with and without 'www.'.
+		if ( strtolower( substr($domain, 0, 4) ) == 'www.' ) $domain = substr($domain, 4);
+		// Add the dot prefix to ensure compatibility with subdomains
+		if ( substr($domain, 0, 1) != '.' ) $domain = '.'.$domain;
+		// Remove port information.
+		$port = strpos($domain, ':');
+		if ( $port !== false ) $domain = substr($domain, 0, $port);
+	}
+	// Prevent "headers already sent" error with utf8 support (BOM)
+	//if ( utf8_support ) header('Content-Type: text/html; charset=utf-8');
+	if(is_array($name)) {
+		header('Set-Cookie: '.$name.'='.rawurlencode($value)
+							.(empty($domain) ? '' : '; Domain='.$domain)
+							.(empty($maxage) ? '' : '; Expires='.date('r',$maxage))
+							.(empty($path) ? '' : '; Path='.$path)
+							.(!$secure ? '' : '; Secure')
+							.(!$HTTPOnly ? '' : '; HttpOnly'), false);
+	}else{
+		header('Set-Cookie: '.rawurlencode($name).'='.rawurlencode($value)
+							.(empty($domain) ? '' : '; Domain='.$domain)
+							.(empty($maxage) ? '' : '; Expires='.date('D, d-M-Y h:i:s T',$maxage))
+							.(empty($path) ? '' : '; Path='.$path)
+							.(!$secure ? '' : '; Secure')
+							.(!$HTTPOnly ? '' : '; HttpOnly'), false);
+	}
+	return true;
+}
+
+function loginfo($msg)
 {
     $logSwitch = 1;         // 日志开关：1表示打开，0表示关闭
     $logFile    = 'temp/browser.log'; // 日志路径           

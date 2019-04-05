@@ -6,38 +6,32 @@
  *	2011/7/10 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 if ( !defined('JIUWAP_TIME_CHA') ){
 	date_default_timezone_set('PRC');
-	function NTP_time($i=0){
-		if ( $i >= 3 ){
-			trigger_error('NTP_time ERROR!!#2', E_USER_ERROR);
-		}
-		$ini = DIR. 'temp/NTP_time.ini';
-		$local = $net = $cha1 = 0;
-		if ( !file_exists($ini) ){
-			if ( !$fp = @fsockopen('203.129.68.14',13,$errno,$errstr,90) ){
-				trigger_error('NTP_time ERROR!!#1', E_USER_ERROR);
-			}
-			$net = @fread($fp,2096);
-			if ( empty($net) ){
-				NTP_time(++$i);
+	function NTP_time(){
+		$local = $net = 0;
+
+		$cha1 = @cloud_memcache::get('ntp_time');
+
+		if ( !$cha1 ){
+			if ( $fp = @fsockopen('203.129.68.14',13,$errno,$errstr,3) ){
+				@stream_set_timeout($fp, 3);
+				$net = @fread($fp,2096);
+				if ( empty($net) ){
+					$cha1 = 0;
+				}else{
+					$net = strtotime($net);
+					$local = time();
+					$cha1 = $net - $local;
+				}
+				if ( $cha1 == 0 ){
+					$cha1 = 1;
+				}
 			}else{
-				$net = strtotime($net);
-				$local = time();
-
-				$cha1 = $net - $local;
-				file_put_contents($ini,$cha1);
+				$cha1 = 1;
 			}
-
-		}else{
-			if ( ($cha1 = @file_get_contents($ini)) === false ){
-				trigger_error('NTP_time ERROR!!#3',E_USER_ERROR);
-			}
+			@cloud_memcache::set('ntp_time',$cha1);
 		}
 		$net = $local + $cha1;
 		define('JIUWAP_TIME_CHA',$cha1);

@@ -6,16 +6,13 @@
  *	2011-4-3 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 
 !defined('m') && header('location: /?r='.rand(0,999));
 
 $_GET['p'] = trim($_GET['p']);
 $arr = $browser->cache_get('pic',$_GET['p']);
+
 if ( !isset($arr['url']) || empty($arr['url']) ){
 	header('HTTP/1.0 404 Not Found');
 	exit;
@@ -24,27 +21,31 @@ if ( !isset($arr['url']) || empty($arr['url']) ){
 }
 
 $referer = $arr['referer'];
-
 $url_A = parse_url($url);
+if ( !isset($url_A['path']) ){
+	$url_A['path'] = '/';
+}
 
 //读取数据库COOKIE
-$cookies = $browser->cookieGet($url_A['host'],$url_A['path']);
+$cookies = $browser->cookieGet($url_A['host'] ,$url_A['path']);
 
-$filename = $b_set['utemp'].'pics/'.$browser->uid.'/'.md5(serialize($cookies)).sha1(substr($url,-7));
+$filename = 'tpic_' . sha1($url);
 if ( $referer ){
     $filename .= substr(md5($referer),5,10);
 }
 
-if ( file_exists($filename) ){
-	//加载缓存图片
-	$_time = filemtime($filename);
-	!$_time && $_time = filectime($filename);
-	$arr = GetImageSize($filename);
-	if ( $arr !== false ){
-		Header('Content-type: '.$arr['mime']);
-		echo file_get_contents($filename);
+if ( $browser->tempfile_exists($filename) ){
+	$filecontent = @$browser->tempfile_read($filename);
+	@file_put_contents($filename,$filecontent);
+	$arr = @GetImageSize($filename);
+	@unlink($filename);
+	if ( $arr === false ){
+		header('HTTP/1.0 404 Not Found');
 		exit;
 	}
+	Header('Content-type: '.$arr['mime']);
+	echo $filecontent;
+	exit;
 }
 
 if ( $browser->pic_wap == 0 && in_array($arr['mime'],array('text/vnd.wap.wml','application/vnd.wap.xhtml+xml','application/vnd.wap.wmlc','text/vnd.wap.wmlscript','application/vnd.wap.wmlscriptc')) ){
@@ -55,25 +56,26 @@ if ( $browser->pic_wap == 0 && in_array($arr['mime'],array('text/vnd.wap.wml','a
 unset($arr);
 
 //检测是否嵌套浏览
-include DIR.'set_config/set_forbidhost.php';
+include ROOT_DIR.'set_config/set_forbidhost.php';
 if ( in_array(strtolower($url_A['host']),$b_set['forbid']) && !stripos($url,$b_set['host'].'/self') ){
 	header('HTTP/1.0 404 Not Found');
     exit;
 }
 
 $http = new httplib();
-$http->referer($referer);
-unset($referer);
-
-if ( $http->open($url,30,3) == false ){
+$http->set_dns($browser->dns_getAll());
+$http->set_referer($referer);
+$http->set_timeout(30);
+$http->set_location(3);
+if ( $http->open($url) == false ){
 	header('HTTP/1.0 404 Not Found');
     exit;
 }
-$url_A = $http->parse_url();
+$url_A = $http->get_urls();
 
 //发送COOKIE
 foreach($cookies as $cookie_key=>$cookie_value){
-	$http->cookie($cookie_key,$cookie_value);
+	$http->put_cookie($cookie_key,$cookie_value);
 }
 unset($cookies,$cookie_key,$cookie_value);
 
@@ -83,10 +85,10 @@ $browser->selectBrowserUA();
 $http->send();
 
 //获取返回头信息
-$header = $http->header();
+$header = $http->get_headers();
 $mime = array('image/gif'=>'gif','image/jpeg'=>'jpg','image/bmp'=>'bmp','image/jpg'=>'jpg','image/png'=>'png');
 if( !isset($header['CONTENT-TYPE']) ){
-	header('HTTP/1.0 404 Not Found');
+	header('HTTP/1.1 404 Not Found');
     exit;
 }
 
@@ -98,9 +100,10 @@ unset($i);
 
 $header['CONTENT-TYPE'] = strtolower($header['CONTENT-TYPE']);
 if ( !isset($mime[$header['CONTENT-TYPE']]) || isset($header['CONTENT-LENGTH']) && $header['CONTENT-LENGTH'] > 2000000){
-	header('HTTP/1.0 404 Not Found');
+	header('HTTP/1.1 404 Not Found');
     exit;
 }
+
 
 //保存返回的COOKIE
 foreach ( $header['COOKIE'] as $key => $value){
@@ -111,10 +114,16 @@ foreach ( $header['COOKIE'] as $key => $value){
 $mime = $mime[$header['CONTENT-TYPE']];
 
 //保存文件
-$pic_file_content = $http->response();
-writefile($filename, $pic_file_content) ;
-unset($http);
+$pic_file_content = $http->get_body();
 
+
+
+$browser->tempfile_write($filename, $pic_file_content);
+
+
+file_put_contents($filename, $pic_file_content);
+
+unset($http);
 $arr = GetImageSize($filename);
 
 if ( $arr === false ){
@@ -142,6 +151,8 @@ switch ($arr[2]) {
 		$zip = true;
 		break;
 }
+
+@unlink($filename);
 
 if ( !$zip || $browser->pic == 6){
 	Header('Content-type: '.$arr['mime']);
@@ -192,7 +203,7 @@ if ( $width > $N_width ){
 $srcW = ImageSX($im);
 $srcH = ImageSY($im);
 $ni = imagecreatetruecolor($width,$height);
-if ($arr[2]<>6){
+if ($arr[2]!=6){
 	imagealphablending($ni,false);
 }
 if ($arr[2]==1){
@@ -231,17 +242,17 @@ switch ($arr[2]) {
 }
 ImageDestroy($im);
 
-$pic_file_content2 = file_get_contents($filename);
+$pic_file_content2 = @file_get_contents($filename);
+@unlink($filename);
 
 $old = strlen($pic_file_content);
 $new = strlen($pic_file_content2);
 if ( $new >= $old  ){
-    writefile($filename, $pic_file_content2) ;
+	$browser->tempfile_write($filename, $pic_file_content);
 	unset($pic_file_content2);
 	echo $pic_file_content;
 }else{
 	$new = $old - $new;
-	//echo $new;
 	$browser->num_add(0,$new);
 	unset($pic_file_content);
 	echo $pic_file_content2;

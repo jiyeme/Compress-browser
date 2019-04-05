@@ -3,19 +3,22 @@
 
 $dir = $browser->db->fetch_first('SELECT title,file,mime,size FROM `disk_file` WHERE id='.$id);
 if ( !$dir ){
-	include DIR. 'tools/disk/_nofoundfile.php';
+	require ROOT_DIR.'tools/disk/_nofoundfile.php';
 	exit;
 }
 
 @ob_end_clean();
 @ob_start();
-@set_time_limit(0);
+@set_time_limit(7200);
 
-$dir['file'] = $b_set['dfforever'].$dir['file'];
-if ( !file_exists($dir['file']) ){
-	header('HTTP/1.0 404 Not Found');
+if ( !cloud_storage::exists('disk_' . $dir['file']) ){
+	//var_dump($dir);exit;
+	echo '文件丢失?';
+	//header('HTTP/1.0 404 Not Found');
 	exit;
 }
+
+$filecontent = @cloud_storage::read('disk_' . $dir['file']);
 
 $ua = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 $filename = $dir['title'];
@@ -30,10 +33,12 @@ if (preg_match("/MSIE/", $ua)) {
 	header('Content-Disposition: attachment; filename="' . $filename . '"');
 }
 header('Content-Encoding: none');
-Header('Content-Length: '.filesize($dir['file']));
+Header('Content-Length: '.strlen($filecontent));
 Header('Content-type: '.get_file_mime(get_short_file_mime($filename)));
 
-if (!$file = @fopen($dir['file'],'rb')){
+@ob_flush();
+flush();
+/*if (!$file = @fopen($dir['file'],'rb')){
 	exit;
 }
 while ( !@feof($file) ) {
@@ -41,5 +46,6 @@ while ( !@feof($file) ) {
 	ob_flush();
 	flush();
 }
-fclose($file);
+fclose($file);*/
+echo $filecontent;
 exit;

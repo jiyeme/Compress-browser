@@ -90,7 +90,7 @@ class smtp_class{
 
 
 	function AddAttachment($path,$name,$type="application/octet-stream"){
-		if($name==""){
+		if($name==''){
 			$name=basename($path);
 		}
 		//$name = iconv("UTF-8","gbk//TRANSLIT",$name);
@@ -201,7 +201,7 @@ class smtp_class{
 
 
 		# send mail
-		$this->SMTP_Data("");
+		$this->SMTP_Data('');
 
 
 		# close SMTP connection
@@ -304,7 +304,7 @@ class smtp_class{
 		}else{
 			$this->send_lines("Content-Type: ".$this->IsHTML($this->IsHTML)."; charset=\"".$this->CharSet."\";");
 		}
-		$this->send_lines("");
+		$this->send_lines('');
 	}
 
 
@@ -312,7 +312,7 @@ class smtp_class{
 		if($this->WordWrap){
 			$this->Body=wordwrap($this->Body,$this->WordWrap,"\n",1);
 		}
-		$this->send_lines(ereg_replace("\n","\r\n",$this->Body));
+		$this->send_lines(str_replace("\n","\r\n",$this->Body));
 	}
 
 
@@ -344,9 +344,9 @@ class smtp_class{
 
 	function IsHTML($status){
 		if($status==true){
-			return $this->ContentType="text/html";
+			return $this->ContentType='text/html';
 		}else{
-			return $this->ContentType="text/plain";
+			return $this->ContentType='text/plain';
 		}
 	}
 
@@ -356,7 +356,7 @@ class smtp_class{
 			$this->error = $message;
 			throw new Exception($message);
 		}
-		if($message!=""){
+		if($message!=''){
 			return $this->error_status=true;
 		}else{
 			return $this->error_status=false;

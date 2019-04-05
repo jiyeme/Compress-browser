@@ -3,19 +3,18 @@
  *
  *	浏览器->书签
  *
- *	2011-4-18 @ jiuwap.cn
+ *	2012/7/26 星期四 @ jiuwap.cn
  *
  */
 
-define('DEFINED_JIUWAP','jiuwap.cn');
 
 if ( !defined('m') ){
-    include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+    require_once 'inc/common.php';
 	$browser->user_login_check();
 }
 $h = isset($_GET['h']) ? $_GET['h'] : '';
 
-if ( $h <> ''){
+if ( $h != ''){
 	$au = '&amp;h='.$h;
 }else{
 	$au = '';
@@ -39,18 +38,18 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 		}
 		echo '<a href="book.php?h='.$h.'">返回书签</a><br/>';
 	}else{
-		if ( $h <> '' ){
+		if ( $h != '' ){
 			echo '<a href="book.php?cmd=new'.$au.'">添加书签</a>.';
 		}else{
 			echo '<a href="book.php?cmd=new'.'">新建书签</a>.';
 		}
 		echo '<a href="book.php?cmd=admin'.$au.'">管理书签</a><br/>';
 	}
-	if ( $h <> '' ){
-		echo '<a href="index.php?h='.$h.'">返回网页</a>.';
-		echo '<a href="index.php?m='.$h.'">返回菜单</a>';
+	if ( $h != '' ){
+		echo '<a href="/?h='.$h.'">返回网页</a>.';
+		echo '<a href="/?m='.$h.'">返回菜单</a>';
 	}else{
-		echo '<a href="index.php?r='.$browser->rand.'">返回首页</a>';
+		echo '<a href="/?r='.$browser->rand.'">返回首页</a>';
 		//echo '<a href="book.php?cmd=netbook'.$au.'">书签同步</a>';
 	}
 
@@ -73,7 +72,7 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 			}
 		}else{
 			foreach ( $var as $val){
-				echo '<a href="index.php?b='.$val['id'].'">'.$val['title'].'</a><br/>';
+				echo '<a href="/?b='.$val['id'].'">'.$val['title'].'</a><br/>';
 			}
 		}
 	}
@@ -102,7 +101,7 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 }elseif( $_GET['cmd'] == 'new' ){
 	$title = '新书签';
 	$url = 'http://';
-	if ( $h <> ''){
+	if ( $h != ''){
 		$arr = $browser->history_get($h);
 		if ( $url !== false ){
 			$title = htmlspecialchars($arr['title']);
@@ -113,29 +112,30 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 		$browser->template_top('添加书签');
 		echo '
 		<form action="book.php?cmd=adddb'.$au.'" method="post">
-		添加书签<br />
-		返回：<a href="index.php?n='.$h.'">书签</a>.';
-		if ( $h<>'' ){
-			echo '<a href="index.php?h='.$h.'">网页</a>.';
+		返回:<a href="book.php?h='.$h.'">书签</a>.';
+		if ( $h!='' ){
+			echo '<a href="/?h='.$h.'">网页</a>.';
 		}
-		echo '<a href="index.php?m='.$h.'">菜单</a><br />
+		echo '<a href="/?m='.$h.'">菜单</a>';
+		echo hr;
+		echo '
+		添加书签<br />
 		标题：<input type="text" name="title" value="'.$title.'" /><br />
 		网址：<input type="text" name="url" value="'.$url.'" /><br />
 		<input type="checkbox" name="cover" value="1" checked="checked">覆盖同名或同网址书签<br />
 		<input type="submit" value="添加"/><br />
-		</form>
-		';
+		</form>';
 		$browser->template_foot();
 
 	}else{
 		$browser->template_top('添加书签');
+		echo '返回:<a href="book.php?h='.$h.'">书签</a>.';
+		if ( $h!='' ){
+			echo '<a href="/?h='.$h.'">网页</a>.';
+		}
+		echo '<a href="/?m='.$h.'">菜单</a>'.hr;
 		echo '
 		添加书签<br />
-		返回：<a href="index.php?n='.$h.'">书签</a>.';
-		if ( $h<>'' ){
-			echo '<a href="index.php?h='.$h.'">网页</a>.';
-		}
-		echo '<a href="index.php?m='.$h.'">菜单</a><br />
 		标题：<input type="text" name="title'.$browser->rand.'" value="'.$title.'" /><br />
 		网址：<input type="text" name="url'.$browser->rand.'" value="'.$url.'" /><br />
 		<select name="cover'.$browser->rand.'">
@@ -223,6 +223,7 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 	}
 	echo $error.'<br/><a href="book.php?cmd=admin'.$au.'">返回书签</a>';
 	$browser->template_foot();
+//此同步有点落后，取消该同步
 /*}elseif( $_GET['cmd'] == 'netbook' ){
 	$host = isset($_POST['host']) ? strtolower(trim($_POST['host'])) : null;
 	$name = isset($_POST['name']) ? trim($_POST['name']) : null;
@@ -241,14 +242,14 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 				echo '错误：不能获取本站书签！'.hr;
 			}elseif ( ($data = @file_get_contents($url)) === false ){
 				echo '错误：连接'.$host.'的API失败,请检查域名是否正确！'.hr;
-			}elseif( ($result = str_pos($data,'<books_result>','</books_result>')) <>'true'){
+			}elseif( ($result = str_pos($data,'<books_result>','</books_result>')) !='true'){
 				echo '错误：获取书签失败，请检查账号密码是否正确！'.hr;
 			}elseif( ($num = str_pos($data,'<books_count>','</books_count>')) == '0' ){
 				echo '错误：获取书签失败，目标书签为空！'.hr;
 			}else{
 				$data = str_pos($data,'<books_content>','</books_content>');
 				$data = explode("\r\n\r\n",$data);
-				if ( count($data) <> $num ){
+				if ( count($data) != $num ){
 					echo '错误：获取书签失败，书签格式错误！'.hr;
 				}else{
 					if ( !isset($_POST['cover']) || $_POST['cover'] == 0){
@@ -259,7 +260,7 @@ if ( !isset($_GET['cmd']) || $_GET['cmd'] == 'admin' || $_GET['cmd'] == 'order')
 					$i=0;
 					foreach ($data as $arr){
 						$arr = explode("\r\n",trim($arr));
-						if ( count($arr)<>2 ){
+						if ( count($arr)!=2 ){
 							continue;
 						}
 						$i++;

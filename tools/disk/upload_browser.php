@@ -8,7 +8,7 @@
  */
 
 !defined('m') && header('location: /?r='.rand(0,999));
-include_once DIR.'tools/disk/inc.php';
+require_once ROOT_DIR.'tools/disk/inc.php';
 
 $_GET['q']= isset($_GET['q']) ? trim($_GET['q']) : null;
 !isset($disk) && init_disk();
@@ -17,8 +17,8 @@ $arr = $browser->cache_get('pic',$_GET['q']);
 if ( !isset($arr['url']) || empty($arr['url']) ){
 	error_show('文件信息丢失(1),请重新下载。('.$_GET['q'].')');
 }
-$filename = $browser->uid.'_'.sha1($arr['url']);
-if ( false !== ($content = @file_get_contents($b_set['rini'].$filename) ) ){
+
+if ( false !== ($content = $browser->temp_read('return_down',sha1($arr['url'])) ) ){
 	if ( !$content = @unserialize($content) ){
 		error_show('文件信息损坏(1),请重新下载。('.$_GET['q'].')');
 	}
@@ -34,8 +34,8 @@ if ( !isset($arr['url']) || empty($arr['url']) ){
 	error_show('文件信息丢失(1),请重新下载。('.$_GET['q'].')');
 }
 
-$filename = $browser->uid.'_'.sha1($arr['url']);
-if ( false !== ($content = @file_get_contents($b_set['rini'].$filename) ) ){
+
+if ( false !== ($content = $browser->temp_read('return_down',sha1($arr['url'])) ) ){
 	if ( !$content = @unserialize($content) ){
 		error_show('文件信息损坏(1),请重新下载。('.$_GET['q'].')');
 	}
@@ -54,7 +54,7 @@ if ( isset($_GET['yes'])){
 	$the_title = urltree($up_id);
 	$basename = $content['name'];
 	$dir = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE id='.$up_id.' AND uid='.$disk['id']);
-	if ( $up_id<>0 && !$dir ){
+	if ( $up_id!=0 && !$dir ){
 		error_show('网盘目录不存在');
 	}
 	$dir = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE oid='.$up_id.' AND title="'.$basename.'" AND uid='.$disk['id']);
@@ -64,33 +64,38 @@ if ( isset($_GET['yes'])){
 	}
 	$mime = get_short_file_mime($basename);
 	$the_save_file = time_().'_'.rand(10000,99999);
-	if ( $mime <> ''){
+	if ( $mime != ''){
 		$the_save_file .= '_'.$mime;
 	}
-	if ( file_exists($b_set['rfile'].$filename) ){
-		copy($b_set['rfile'].$filename,$b_set['dfforever'].$the_save_file);
+	if ( $browser->tempfile_exists(sha1($arr['url'])) ){
+		$filecontent = $browser->tempfile_read(sha1($arr['url']));
+		@cloud_storage::write('disk_' . $the_save_file,$filecontent);
 	}else{
 		$http = new httplib();
-		$http->referer($arr['referer']);
+		$http->set_dns($browser->dns_getAll());
+		//$http->set_referer($arr['referer']);
 		/*if( !empty($browser->ipagent) ){
 			$ip = explode(':',$http->ipagent);
 	        $http->proxy(trim($ip[0]),trim($ip[1]));
 			unset($ip);
 		}*/
-		$http->open(fix_r_n_t($arr['url']),30,3);
-		//if ( $content['cookie'] ){
-		//	foreach ( $content['cookie'] as $name => $value){
-		//		$http->cookie($name,$value);
-		//	}
-		//}
-		$cookies = $content['cookie'];
-		foreach($cookies as $cookie_key=>$cookie_value){
-			$http->cookie($cookie_key,$cookie_value);
+		$http->set_timeout(30);
+		$http->set_location(3);
+		$http->open(fix_r_n_t($arr['url']));
+
+		foreach($content['cookie'] as $cookie_key=>$cookie_value){
+			$http->put_cookie($cookie_key,$cookie_value);
 		}
-		unset($cookies,$cookie_key,$cookie_value);
+		unset($cookie_key,$cookie_value);
+
+		foreach($content['header'] as $header_key=>$header_value){
+			$http->put_header($header_key,$header_value);
+		}
+		unset($header_key,$header_value);
+
 		$http->send();
-		$header = $http->header();
-		set_time_limit(0);
+		$header = $http->get_headers();
+		@set_time_limit(7200);
 
 		if ( !isset($header['STATUS']) || $header['STATUS'] != '200' ){
 			error_show('连接目标文件失败,请重新下载。');
@@ -101,7 +106,7 @@ if ( isset($_GET['yes'])){
 		if ( isset($header['CONTENT-LENGTH']) ){
 			$content['size'] = $header['CONTENT-LENGTH'];
 		}
-		writefile($b_set['dfforever'].$the_save_file,$http->response());
+		@cloud_storage::write('disk_' . $the_save_file,$http->get_body());
 	}
 
 	$arr = array(
@@ -117,7 +122,8 @@ if ( isset($_GET['yes'])){
     $browser->template_top('上传文件');
 	echo '<a href="disk.php?id=0'.$h.'">root</a>:\\'.$the_title.hr;
 	if ( $id ){
-		$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$arr['size'].' WHERE id='.$disk['id']);
+		//var_dump($arr);exit;
+		disk_space_update(+$arr['size']);
 		echo '上传文件成功！<br/>查看<a href="disk.php?cmd=info&amp;id='.$id.'&amp;uid='.$up_id.$h.'">['.$basename.']</a><br/>';
 		$browser->template_foot();
 	}else{
@@ -138,12 +144,12 @@ if ( isset($_GET['yes'])){
 			'.tree_select().'
 		</select><br />
 		<anchor>
-		<go href="?yes=yes&amp;q='.$_GET['q'].'" method="post">
+		<go href="index.php?yes=yes&amp;q='.$_GET['q'].'" method="post">
 		<postfield name="oid" value="$(oid'.$browser->rand.')" />
 		</go>上传</anchor><br/>
 		';
 	}else{
-		echo '<form action="?yes=yes&amp;q='.$_GET['q'].'" method="post">
+		echo '<form action="index.php?yes=yes&amp;q='.$_GET['q'].'" method="post">
 		目录：<select name="oid">
 			<option value="0" selected="selected">根目录(root)</option>
 			'.tree_select().'

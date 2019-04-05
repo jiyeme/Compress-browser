@@ -106,7 +106,7 @@ if ( isset($_GET['time']) ){
     foot_wap();
     exit;
 }else{
-	top_wap('浏览器底部模板合辑');
+	top_wap('浏览器底部模板');
 	echo '
 	书签:<a>[book]</a><br/>
 	存书签:<a>[add]</a><br/>
@@ -120,6 +120,7 @@ if ( isset($_GET['time']) ){
 	跳出:<a>[jump]</a><br/>
 	网址:<a>[url]</a><br/>
 	网址输入框:<a>[go]</a><br/>
+	COOKIE管理:<a>[cookie]</a><br/>
 	换行:<a>[br]</a><br/>
 	<?=hr?>
 	时间:<a>[time=内容]</a><br/>

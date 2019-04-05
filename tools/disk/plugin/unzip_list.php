@@ -2,17 +2,17 @@
 !defined('m') && header('location: /?r='.rand(0,999));
 $act = isset($_GET['act']) ? $_GET['act'] : null;
 if ( $act == 'pack' ){
-	include 'unzip_pack.php';
+	require ROOT_DIR.'tools/disk/plugin\unzip_pack.php';
 }elseif( $act == 'add' ){
-	include 'unzip_add.php';
+	require ROOT_DIR.'tools/disk/plugin\unzip_add.php';
 }elseif( $act == 'newdir' ){
-	include 'unzip_newdir.php';
+	require ROOT_DIR.'tools/disk/plugin\unzip_newdir.php';
 }elseif( $act == 'deldir' ){
-	include 'unzip_deldir.php';
+	require ROOT_DIR.'tools/disk/plugin\unzip_deldir.php';
 }elseif( $act == 'rename' ){
-	include 'unzip_rename.php';
+	require ROOT_DIR.'tools/disk/plugin\unzip_rename.php';
 }elseif( $act == 'unpack' ){
-	include 'unzip_unpack.php';
+	require ROOT_DIR.'tools/disk/plugin\unzip_unpack.php';
 }
 echo '<a href="disk.php?cmd=info&amp;id='.$id.$h.'">返回文件</a><br/>';
 echo '<a href="disk.php?cmd=info&amp;do=unzip&amp;act=pack&amp;id='.$id.$h.'">重新打包</a>,';
@@ -25,13 +25,13 @@ if ( $_url != '' ){
 }
 echo hr;
 echo '目录:/'.$_url.'<br/>';
-if ( $_url <> ''){
+if ( $_url != ''){
 	echo '<img src="'.getico().'" alt="dir"/><a href="disk.php?cmd=info&amp;do=unzip&amp;dir='.urlencode($_up).'&amp;id='.$id.$h.'">返回上级</a><br/>';
 }
 
 $list_dir = '';
 $list_file = '';
-$__url<>'' && $__url .= '%2F';
+$__url!='' && $__url .= '%2F';
 $dir = opendir($__turl);
 while( $file = readdir($dir) ){
 	if ( $file == '.' || $file == '..' ){

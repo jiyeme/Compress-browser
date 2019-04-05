@@ -1,6 +1,13 @@
 <?php
-define('DEFINED_JIUWAP','jiuwap.cn');
-include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+/*
+ *
+ *	浏览器->注册
+ *
+ *	2012/7/26 星期四 @ jiuwap.cn
+ *
+ */
+
+require 'inc/common.php';
 if ( isset($_GET['yes']) ){
 	$get_string = $browser->user_reg($_POST['name'],$_POST['pass'],$_POST['pass']);
 	if ( $get_string === false ){

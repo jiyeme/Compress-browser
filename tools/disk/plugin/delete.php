@@ -6,15 +6,12 @@ if ( !isset($_GET['yes']) ){
 	echo '<a href="disk.php?cmd=info&amp;id='.$id.$h.'">返回文件</a>';
 }else{
     if ( $dir['mime'] == 'zip' || $dir['mime'] == 'jar' || $dir['mime'] == 'mrp'){
-		$_dir = $b_set['dftemp'].md5($id.'_u');
+		$_dir = ROOT_DIR . 'temp/disk_temp/'.md5($id.'_u');
         deldir($_dir);
         $dir['mime'] == 'mrp' && @unlink($_dir.'_list');
     }
-	if ( !file_exists($b_set['dfforever'].$dir['file']) || @unlink($b_set['dfforever'].$dir['file']) ){
-		$browser->db->query('UPDATE `disk_config` SET space_use=space_use-'.$dir['size'].' WHERE id='.$disk['id']);
-		$browser->db->delete('disk_file','id='.$id,1);
-		echo '删除成功！';
-	}else{
-		echo '删除失败！';
-	}
+	@cloud_storage::delete('disk_' . $dir['file']);
+	disk_space_update(-$dir['size']);
+	$browser->db->delete('disk_file','id='.$id,1);
+	echo '删除成功！';
 }

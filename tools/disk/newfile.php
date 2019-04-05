@@ -52,10 +52,10 @@ if ( isset($_GET['yes']) ){
 			}elseif ( $arr['size'] > $b_set['dlocal']) {
 				echo '错误：文件不得大于'.bitsize($b_set['dlocal']).'！';
 			}else{
-				writefile($b_set['dfforever'].$the_save_file,$content);
+				cloud_storage::write('disk_' . $the_save_file,$content);
 				$id = $browser->db->insert('disk_file',$arr,true);
 				if ( $id ){
-					$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$arr['size'].' WHERE id='.$disk['id']);
+					disk_space_update(+$arr['size']);
 					echo '新建文件成功！<br/>查看<a href="disk.php?cmd=info&amp;id='.$id.'&amp;uid='.$up_id.$h.'">['.$title.']</a><br/>';
 					$browser->template_foot();
 				}else{

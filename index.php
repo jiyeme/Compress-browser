@@ -1,206 +1,147 @@
 <?php
 /*
+ *
+ *	浏览器->index入口点
+ *
+ *	2012/7/26 星期四 @ jiuwap.cn
+ *
 
-http://f.10086.cn/p/p/i2iaya/?0%3Btianyiw%3B342114966:%3Fp%3D3@cx.jiuwap.cn
+ */
 
-*/
-
-if ( defined('ML') ){
-    require 'index2.php';
-    return;
+$version = '0';
+@include 'set_config/version.php';
+if ( $version == 0 ){
+	header('LOCATION: /install/index.php');
+    exit;
 }
-if ( !defined('fxDomian') ){
-    define('fxDomian',$_SERVER['SERVER_NAME']);
+header('Pragma: no-cache');
+header('Expires: Mon, 26 Jul 2010 05:00:00 GMT');
+header('Cache-Control: no-cache, must-revalidate');
+
+define('m','true');
+
+
+require 'inc/common.php';
+
+$browser->user_login_check();
+
+$cmd = trim($_SERVER['QUERY_STRING']);
+
+if ( $cmd=='' || $cmd == '_main' || substr($cmd,0,6)=='_main=' || isset($_GET['r']) && $_GET['r']!='' &&  !isset($_POST['url']) ){
+	//require 'parse/function.php';
+	load_template('default');
+	exit;
 }
 
-function fxURL0($url,$qian='href'){
-    $url = str_replace('/','%2F',$url);
-    if (defined('ML_noreal')){
-        return $qian.'="http://f.10086.cn/p/p/i2iaya/?'.$_COOKIE['FREE'].':'.$url.'@'.fxDomian.'"';
+init_ad_index();
+
+//p o n m h b s v po d z q dl dh dn fi
+if ( isset($_GET['p']) && $_GET['p']!='') {
+	require ROOT_DIR.'parse/pic.php';
+	exit;
+}elseif( isset($_GET['o']) && $_GET['o']!='') {
+	$url = $browser->history_get($_GET['o']);
+	if ( $url !== false ){
+		header('Location: '.$url['url']);
+	}else{
+		header('Location: /');
+	}
+	exit;
+}elseif( isset($_GET['z']) && $_GET['z']!='') {
+	if ( !$b_set['switch']['agantdown'] ){
+		error_show('中转下载功能已经被关闭。');
+	}
+	require ROOT_DIR.'parse/parse_down_file.php';
+	exit;
+}elseif( isset($_GET['q']) && $_GET['q']!='') {
+	if ( !$b_set['switch']['disk'] ){
+		error_show('网盘功能已经被关闭。');
+	}
+	require ROOT_DIR.'tools/disk/upload_browser.php';
+	exit;
+
+}elseif( isset($_GET['d']) && $_GET['d']!='') {
+	$arr = $browser->cache_get('pic',$_GET['d']);
+	if ( isset($arr['url']) && !empty($arr['url']) ){
+		header('Location: '.$arr['url']);
+	}else{
+		header('Location: /');
+	}
+	exit;
+}elseif( isset($_GET['n']) && $_GET['n']!='') {
+	$_GET['h'] = $_GET['n'];
+	unset($_GET['n']);
+	require ROOT_DIR.'book.php';
+	exit;
+}elseif( isset($_GET['m']) && $_GET['m']!='' || $cmd == 'm=') {
+	$_GET['h'] = $_GET['m'];
+	unset($_GET['m']);
+	require ROOT_DIR.'fun.php';
+	exit;
+}elseif ( (isset($_GET['h']) && $_GET['h']!='') || (isset($_GET['dl']) && $_GET['dl']!='')  || (isset($_GET['dh']) && $_GET['dh']!='') ) {
+    if ( isset($_GET['h']) ){
+        $id = $_GET['h'];
+    }elseif ( isset($_GET['dh']) ){
+        $id = $_GET['dh'];
+        $form_diskupload = false;
     }else{
-        return $qian.'="?'.$_COOKIE['FREE'].':'.$url.'@'.fxDomian.'"';
+        $id = $_GET['dl'];
+        $form_diskupload = true;
     }
-}
-
-function fxURL_gohref($url){
-    $url = str_replace('/','%2F',$url);
-    $url = str_replace('?','?gg=',$url);
-    $url = str_replace('gg=po','po',$url);
-    return '<go_h_ref="http://'.fxDomian.'/'.$url.'&amp;sid='.$_COOKIE['FREE'].'&amp;fxml=post"';
-}
-function fxURL_goaction($url){
-    $url = str_replace('/','%2F',$url);
-    if( strpos($url,'synch.php?yes=yes') !==false ){
-        $url = str_replace('synch.php?yes=yes','index.php',$url);
-        $ppp = '/get/synch=yes&amp;yes=yes&amp;';//转换为get呗
-    }elseif( strpos($url,'set.php?yes=yes') !==false ){
-        $url = str_replace('set.php?yes=yes','index.php',$url);
-        $ppp = '/get/set=yes&amp;yes=yes&amp;';//转换为get呗
-    }elseif ( strpos($url,'?') === false  ){
-        $url = str_replace('?','?gg=',$url);
-        $ppp = '/get/';//转换为get呗
-    }else{
-        $ppp = '&amp;';
-    }
-
-    return 'action="http://'.fxDomian.'/'.$url.$ppp.'sid='.$_COOKIE['FREE'].'&amp;fxml=post"';
-}
-
-
-function fxURL($html){
-    $html = str_replace('@','&at;at;',$html);
-    //$html = preg_replace('@href="?(.*?)"@ies','href="?'.$_COOKIE['FREE'].':$1@'.fxDomian.'"', $html);
-
-    //wap 下表单
-    $html = str_replace('<go href="','<go_h_ref="',$html);
-
-    $html = preg_replace('@<go_h_ref="(.*?)"@ies',"fxURL_gohref('\\1')", $html);
-    $html = preg_replace('@action="?(.*?)"@ies',"fxURL_goaction('\\1')", $html);
-
-
-    $html = preg_replace('@href="?(.*?)"@ies',"fxURL0('\\1')", $html);
-    $html = preg_replace('@ontimer="?(.*?)"@ies',"fxURL0('\\1','ontimer')", $html);
-
-    //不支持图片,暂时没想出解决方法。只能显示原图咯
-    global $browser;
-    if ( isset($browser) &&  $browser->pic == 2 || $browser->pic == 3 || $browser->pic == 5 || $browser->pic == 6 || $browser->pic == 7 || $browser->pic == 8 ){
-        $html = preg_replace('@src="(.*?)"@i','src="http://'.fxDomian.'/$1&amp;sid='.$_COOKIE['FREE'].'&amp;fxml=y"', $html);
-    }
-
-    $html = preg_replace('@get="(.*?)"@i','src="http://'.fxDomian.'/$1&amp;sid='.$_COOKIE['FREE'].'&amp;fxml=gif"', $html);
-    $html = str_replace('&at;at;','@',$html);
-    $html = str_replace('<go_h_ref="','<go href="',$html);
-
-    return $html;
-    //return 'http://f.10086.cn/p/p/i2iaya/?cookie:url@cx.jiuwap.cn';
-}
-
-function fxURL2($return=false){
-	$html = ob_get_contents();;
-	ob_clean();
-    $html = fxURL($html);
-    if ( $return ){
-        return $html ;
-    }else{
-        echo $html;
-    }
-}
-
-
-if ( isset($_GET['fxml']) && $_GET['fxml'] =='gif' && isset($_GET['sid'])){
-    $_COOKIE['FREE'] = $_GET['sid'];
-    include $_SERVER['DOCUMENT_ROOT'].'/index2.php';
-    return null;
-}
-if ( (isset($_GET['gg']) || isset($_GET['po'])) && isset($_GET['fxml']) && $_GET['fxml'] =='post' && isset($_GET['sid'])){
-    $_COOKIE['FREE'] = $_GET['sid'];
-    if ( isset($_GET['gg']) ){
-        $_SERVER['QUERY_STRING'] = $_GET['gg'];
-    }else{
-        $_SERVER['QUERY_STRING'] = 'po='.$_GET['po'];
-    }
-    unset($_GET['fxml'],$_GET['sid']);
-    define('ML',true);
-    define('ML_noreal',true);
-    include $_SERVER['DOCUMENT_ROOT'].'/index2.php';
-    return null;
-}
-
-if ( isset($_SERVER['PHP_SELF']) ){
-    $PPPF = $_SERVER['PHP_SELF'];
-}elseif( isset($_SERVER['PATH_INFO']) ){
-    $PPPF = $_SERVER['PATH_INFO'];
-}elseif( isset($_SERVER['REQUEST_URI']) ){
-    $PPPF = $_SERVER['REQUEST_URI'];
+	$url = $browser->history_get($id);
+	if ( $url === false ){
+        error_show('历史记录不存在','错误：历史记录不存在#1['.$id.']');
+	}
+	require ROOT_DIR.'parse/parse_history.php';
+	exit;
+}elseif ( isset($_GET['b']) && $_GET['b']!='') {
+	$id = (int)$_GET['b'];
+	$url = $browser->book_get($id,true);
+	if ( $url == false ){
+        error_show('书签未找到','错误：书签未找到#1');
+	}
+	$url = $url['url'];
+}elseif ( isset($_GET['s']) && $_GET['s']!='') {
+	$id = (int)$_GET['s'];
+	$url = $browser->site_get($id);
+	if ( $url == false ){
+        error_show('导航站未找到','错误：导航站未找到#1');
+	}
+	$url = $url['url'];
+}elseif ( isset($_GET['v']) && $_GET['v']!='') {
+	//css
+	$url = $browser->cache_get('url',$_GET['v']);
+	if ( $url == false ){
+		exit;
+	}else{
+		$is_css = true;
+		require ROOT_DIR.'parse/init.php';
+	}
+}elseif ( isset($_GET['url']) ) {
+	$url = ubb_copy(fix_r_n_t($_GET['url']));
 }else{
-    $PPPF = false;
-}
-if ( $PPPF !== false ){
-    $aaa = strpos($PPPF,'/get/');
-    if ( $aaa !== false ){
-        $fxgets = substr($PPPF,$aaa+5);
-        $fxgets = explode('&',$fxgets);
-        foreach($fxgets as $fxget){
-            $pp = strpos($fxget,'=');
-            if ( $pp !== false ){
-                $fxgKey = substr($fxget,0,$pp);
-                $fxgValue = substr($fxget,$pp+1);
-                if ( $fxgKey == 'yes' ){
-                    $_GET['yes'] = $fxgValue;
-                } elseif ( $fxgKey == 'sid' ){
-                    $_COOKIE['FREE'] = $fxgValue;
-                } elseif ( $fxgKey == 'synch' || $fxgKey == 'set' ){
-                    $gotophpa = $fxgKey;
-                }
-
-            }
-        }
-        define('ML',true);
-        define('ML_noreal',true);
-        if ( isset($gotophpa) ){
-            include $_SERVER['DOCUMENT_ROOT'].'/'.$gotophpa.'.php';
-        }else{
-            include $_SERVER['DOCUMENT_ROOT'].'/index2.php';
-        }
-        return null;
-    }
+    if ( isset($_GET['dn']) && $_GET['dn']!=''){
+        //网盘上传
+		$cmd = $_GET['dn'];
+		$form_2diskup = true;
+	}elseif ( isset($_GET['po']) && $_GET['po']!=''){
+        //GET变为POST
+		$cmd = $_GET['po'];
+		$form_post2get = true;
+	}else{
+		$i = strpos($cmd,'&');
+		if ($i!==false){
+			$cmd = substr($cmd,0,$i);
+		}
+		unset($i);
+	}
+	if ( substr($cmd,0,10) == 'index.php?' ){
+		$cmd = substr($cmd,10);
+	}
+	$url = $browser->cache_get('url',$cmd);
+	if ( $url == false ){
+        error_show('URL缓存未找到','错误：URL缓存未找到#1');
+	}
 }
 
-//  模板;账号;密码;URL
-
-if ( !isset($_SERVER['HTTP_VIA']) || stripos($_SERVER['HTTP_VIA'],'QZ-Game') === false  ){
-    define('ML',false);
-    require 'index2.php';
-    return;
-}else{
-    define('ML',true);
-    $_COOKIE['FREE'] = urldecode(substr($_SERVER['PHP_AUTH_USER'],8));
-
-    $fxtmp = trim(urldecode(trim($_SERVER['PHP_AUTH_PW'])));
-
-    $pos = strpos($fxtmp,'?');
-    if ( $pos === false ){
-        //echo $fxtmp;exit;
-        if ( substr($fxtmp,0,7) == 'http://' ){
-            $_GET['url'] = $fxtmp;
-            $_SERVER['QUERY_STRING'] = 'url='.$fxtmp;
-            $fxtmp = 'index2.php';
-        }elseif ( $fxtmp == '' || $fxtmp == '/' || $fxtmp == '\\' || $fxtmp=='/index.php' || $fxtmp=='index.php' ){
-            $fxtmp = 'index2.php';
-        }
-        include $_SERVER['DOCUMENT_ROOT'].'/'.$fxtmp;
-        exit;
-    }else{
-        //处理get
-        $fxget = substr($fxtmp,$pos+1);
-        $_SERVER['QUERY_STRING'] = $fxget;
-        $fxgets = explode('&',$fxget);
-        foreach($fxgets as $fxget){
-            $pp = strpos($fxget,'=');
-            if ( $pp !== false ){
-                $fxgKey = substr($fxget,0,$pp);
-                $fxgValue = substr($fxget,$pp+1);
-                $_GET[$fxgKey] = $fxgValue;
-                $_REQUEST[$fxgKey] = $fxgValue;
-            }
-        }
-
-        //var_dump($_GET);exit;
-
-        //处理文件
-        $fxfile = substr($fxtmp,0,$pos);
-        if( $fxfile == '' || $fxfile == '/' || $fxfile =='index.php' || $fxfile =='/index.php' ){
-            $fxfile = 'index2.php';
-        }elseif (substr($fxfile,-1) == '/' ){
-            $fxfile .= 'index2.php';
-        }
-        include $_SERVER['DOCUMENT_ROOT'].'/'.$fxfile;
-    }
-
-
-}
-
-
-
-
-
+require ROOT_DIR.'parse/init.php';

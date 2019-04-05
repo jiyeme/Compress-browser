@@ -1,13 +1,10 @@
-2012-2-16 02:47    By tianyiw
+��Դ��ȫ��������������(�ռ�)��Ŀ¼��
 
+�޸� set_config/set_config.php ������ݣ���mysql��ACE��SAE���ݿ⡣
 
-统，时间仓促，尚未完全测试。。。
+����http://localhost/install/index.php?do=install_full ����SQL�İ�װ
 
-
-如有任何疑问------>>>>>   jiuwap.cn
-
-
-
+��ɡ�
 
 
 
@@ -19,67 +16,8 @@
 
 
 
-
-程序演示：
-http://nn.jiuwap.cn
-http://mm.jiuwap.cn
-
-玖玩浏览器 2011-9-1
-
-----------------
-
-程序更新日志可以看 http://mm.jiuwap.cn/self/new.php
-官方网站 http://jiuwap.cn/
-
-----------------
-
-简述：玖玩浏览器,一款高级强大的网页浏览器!能让你的山寨机浏览电脑WEB网页的网页浏览器！
-      超强页面压缩,几百KB的网页压缩到几十KB,压缩图片,网盘上传下载,内置书签,跨平台的浏览器！！
-      强大的网盘系统,在线操作多种文件(如doc/jar/mrp/zip等)
-
-最新：20110901
-
-环境：PHP5、MySQL5+
-
-提示：本程序只能运行在网站根目录!可以用域名绑定子目录!请注意网站要有读写权限,否则玖玩浏览器无法安装也无法使用！
-      PHP需要开启fsockopen、gd、iconv、mb，否则无法使用。
-
-提示：通过/install安装后,建议不要删除install,日后玖玩浏览器更新后,您只需运行install里的更新即可升级到最新玖玩浏览器源码!
-
-版权：本程序由tianyiw(jiuwap.cn)独立开发,免费给大家使用,用户不得擅自修改或删除网页底部Powered By Jiuwap.cn版权信息,
-     其他地方随便改,如果发现BUG或建议请到玖玩网反馈,本程序不得用于商业服务!
-
-保护：请注意保护用户数据,不得窃取、公开部分或全部COOKIE/URL/表单/剪切板/文件等内容,不得使用用户数据!
-     本站不对这些负责,本站只提供源码,也请网友不要轻易使用别人的网页浏览器！
-
-敬告：本程序当前仅能运行在根目录！！！
-
-安装方法(两种)：
-
-一：(本地FTP全文件上传)
-	1.解压缩jiuwap_browser_20110901.zip，(FTP)上传整站源码
-	2.运行install/index.php 按提示进行安装
-	3.搞定，以后需要手工更新文件，只需运行install/index.php按提示操作即可自动升级到最新玖玩浏览器！！
+����http://localhost/install/index.php?do=unstall �����ݿ����ж��ɾ����
 
 
-二：(单文件网络远程上传)
-	1.解压缩install_remote.zip，(FTP)上传install_remote.php
-	2.运行install_remote.php，一步一步操作
-	3.见安装方法一(2)
-	.
-	.
 
-
-很多朋友反映,只有一修改php代码就会出现乱码现象,那是因为你使用的记事本(或者WORD等)保存编码时不是UTF-8(不带dom)
-本程序源码均为utf-8(不带dom)，推荐大家使用editplus编辑器！！
-editplus下载地址：
-http://www.xiazaiba.com/html/184.html
-http://www.downg.com/soft/10360.html
- (上述地址没有经过我测试,理论上都是破解+绿色版)
-
-========================================
-
-为了方便站长对浏览器界面的自定义修改，我特意准备的简单的模板系统，请看目录template，详细使用方法请到jiuwap.cn查阅
-
-
-【玖玩浏览器源码全部公开，无任何加密，请保留玖玩网版权，谢谢。】
+---��ȫ����������ڳ���װ��ɺ� ɾ��/install�ļ���

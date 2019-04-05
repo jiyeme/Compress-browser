@@ -1,17 +1,8 @@
 <?php
-if ( !defined('DIR') ){
-	die('hello world');
-}
-
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
-
+\
 $isfull = post('isfull',1);
 $psw = isset($_REQUEST['psw']) ? $_REQUEST['psw'] : '';
-if ( file_exists(DIR.'set_config/set_config.php') ){
+if ( file_Exists('../set_config/set_config.php') ){
 	if ( $version && $version<'20110431' ){
 		top('安装玖玩浏览器');
 		echo '<b>重新安装玖玩浏览器</b>';
@@ -20,8 +11,8 @@ if ( file_exists(DIR.'set_config/set_config.php') ){
 		foot();
 		exit;
 	}
-	@include DIR.'set_config/set_config.php';
-	@include DIR.'set_config/set_mail.php';
+	@include '../set_config/set_config.php';
+	@include '../set_config/set_mail.php';
 	$db_server = post('db_server',$b_set['db']['server']);
 	$db_user = post('db_user',$b_set['db']['user']);
 	$db_pass = post('db_pass',$b_set['db']['pass']);
@@ -80,17 +71,17 @@ if ( file_exists(DIR.'set_config/set_config.php') ){
 	$是否是覆盖安装 = true;
 }else{
 	$db_server = post('db_server','localhost');
-	$db_user = post('db_user','jysafec1_llq');
-	$db_pass = post('db_pass','jtGaSQ_eu2oe');
-	$db_table = post('db_table','jysafec1_sql');
+	$db_user = post('db_user','');
+	$db_pass = post('db_pass','');
+	$db_table = post('db_table','');
 	$icp = post('icp','');
 	$title_str = post('title_str','[压流]');
-	$webtitle = post('webtitle','祭夜浏览器');
-	$disktitle = post('disktitle','祭夜网盘');
-	$mail_smtp = post('mail_smtp','yl.jysafe.cn');
-	$mail_user = post('mail_user','me@yl.jysafe.cn');
-	$mail_pass = post('mail_pass','CQC.cqc.0130');
-	$mail_from = post('mail_from','me@yl.jysafe.cn');
+	$webtitle = post('webtitle','玖玩浏览器');
+	$disktitle = post('disktitle','玖玩网盘');
+	$mail_smtp = post('mail_smtp','smtp.qq.com');
+	$mail_user = post('mail_user','10000@qq.com');
+	$mail_pass = post('mail_pass','');
+	$mail_from = post('mail_from','10000@qq.com');
 	$tupload = post('tupload','10');
 	$tdown = post('tdown','10');
 	$tmail = post('tmail','10');
@@ -98,7 +89,7 @@ if ( file_exists(DIR.'set_config/set_config.php') ){
 	$dhttp = post('dhttp','10');
 	$thttp = post('thttp','10');
 	$dinit = post('dinit','50');
-	$rootpassword = post('rootpassword','jysafe');
+	$rootpassword = post('rootpassword','jiuwap');
 	$是否是覆盖安装 = false;
 }
 
@@ -115,7 +106,7 @@ if ( isset($_GET['yes']) ){
 		if ( $isfull ){
 			$是否是覆盖安装 = false;
 			quick_connect('api/?cmd=clean_all&psw='.$psw);
-			@mysql_query('DROP TABLE `browser_books`,`browser_caches`,`browser_copys`,`browser_users`,`disk_config`,`disk_dir`,`disk_file`,`browser_cookies`;');
+			@mysql_query('DROP TABLE `browser_books`,`browser_caches`,`browser_copys`,`browser_users`,`browser_users`,`disk_dir`,`disk_file`,`browser_cookies`;');
 		}
 		if ( !$sql = @file_get_contents('jiuwap.sql') ){
 			throw new Exception('读取jiuwap.sql时发生错误');
@@ -128,7 +119,7 @@ if ( isset($_GET['yes']) ){
 		}
 		if ( $是否是覆盖安装 ){
 			$nDir = array(
-				DIR.'temp/cache_forever/',
+				'./temp/cache_forever/',
 				$b_set['dfforever'],
 				$b_set['dftemp'],
 				$b_set['rfile'],
@@ -146,13 +137,13 @@ if ( isset($_GET['yes']) ){
 		}else{
 			$tmp = strtolower(str_rand(7));
 			$nDir = array(
-				DIR.'temp/cache_forever/',
-				DIR.'temp/disk_forever_'.$tmp.'/',
-				DIR.'temp/disk_temp_'.$tmp.'/',
-				DIR.'temp/down_file_'.$tmp.'/',
-				DIR.'temp/down_ini_'.$tmp.'/',
-				DIR.'temp/cache_'.$tmp.'/',
-				DIR.'temp/cache_'.$tmp.'/pics/',
+				'./temp/cache_forever/',
+				'./temp/disk_forever_'.$tmp.'/',
+				'./temp/disk_temp_'.$tmp.'/',
+				'./temp/down_file_'.$tmp.'/',
+				'./temp/down_ini_'.$tmp.'/',
+				'./temp/cache_'.$tmp.'/',
+				'./temp/cache_'.$tmp.'/pics/',
 			);
 			$nPassKey = array(
 				str_rand(7),
@@ -163,7 +154,7 @@ if ( isset($_GET['yes']) ){
 			$nDir2 = $nDir;
 		}
 		foreach( $nDir2 as $k=>$__Dir){
-			$nDir2[$k] = 'DIR.\''.substr($__Dir,strlen(DIR)).'\'';
+			$nDir2[$k] = '\''.($__Dir).'\'';
 		}
 		if ( !$set_config = @file_get_contents('set_config.tmp') ){
 			throw new Exception('读取set_config.tmp时发生错误');
@@ -206,10 +197,10 @@ if ( isset($_GET['yes']) ){
 		$set_config = str_replace('[rootpassword]',$rootpassword,$set_config);
 
 		$set_config = str_replace('[tips]','安装于'.date('Y-n-j H:i:s'),$set_config);
-		if ( !@file_put_contents(DIR.'set_config/set_config.php',$set_config) ){
+		if ( !@file_put_contents('../set_config/set_config.php',$set_config) ){
 			throw new Exception('保存set_config.php时发生错误');
 		}
-		@unlink(DIR.'set_config/set_mail.php');
+		unlink('../set_config/set_mail.php');
 
 		$ver="<?php
 		//请不要修改或删除本文件!!
@@ -217,7 +208,7 @@ if ( isset($_GET['yes']) ){
 		//以免造成浏览器无法升级!!
 		//删除本文件后即可重新安装！！
 		\$version = '{$install_version}';";
-		if ( !@file_put_contents(DIR.'set_config/version.php',$ver) ){
+		if ( !@file_put_contents('../set_config/version.php',$ver) ){
 			throw new Exception('保存version.php时发生错误');
 		}
 		foreach($nDir as $dir){

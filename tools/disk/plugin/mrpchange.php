@@ -1,9 +1,11 @@
 <?php
 !defined('m') && header('location: /?r='.rand(0,999));
-include DIR. 'inc/class/mrp.lib.php';
+require ROOT_DIR.'inc/class/mrp.lib.php';
 
 
-$file_mrp = $b_set['dfforever'].$dir['file'];
+$file_mrp = cloud_storage::localname('tmp_' . rand(0,999) . time());
+$file_mrp = @cloud_storage::download_tmp('disk_' . $dir['file'],$file_mrp);
+
 if ( isset($_GET['yes'])){
 	$mrp_info['xn'] = isset($_POST['xn']) ? trim($_POST['xn']) : '';
 	$mrp_info['nn'] = isset($_POST['nn']) ? trim($_POST['nn']) : '';
@@ -15,6 +17,7 @@ if ( isset($_GET['yes'])){
 	if ( !mrp::put($file_mrp,$mrp_info) ){
 		echo '未知原因,修改失败！';
 	}else{
+		@cloud_storage::upload_temp($file_mrp,'disk_' . $dir['file']);
 		echo 'MRP信息修改成功！';
 	}
 	echo '<br/><a href="disk.php?cmd=info&amp;do=mrpchange&amp;id='.$id.$h.'">返回修改</a><br/><a href="disk.php?cmd=info&amp;id='.$id.$h.'">返回文件</a>';

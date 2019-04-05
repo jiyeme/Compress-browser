@@ -8,26 +8,29 @@
  */
 
 !defined('m') && header('location: /?r='.rand(0,999));
-include_once DIR.'tools/disk/inc.php';
+require_once ROOT_DIR.'tools/disk/inc.php';
 
 $_GET['z']= trim($_GET['z']);
 
 $arr = $browser->cache_get('pic',$_GET['z']);
 if ( !isset($arr['url']) || empty($arr['url']) ){
-	error_show('文件信息丢失(1),请重新下载。('.$_GET['z'].')');
+	error_show('文件信息丢失(133),请重新下载。('.$_GET['z'].')');
 }
-$filename = $browser->uid.'_'.sha1($arr['url']);
-if ( false !== ($content = @file_get_contents($b_set['rini'].$filename) ) ){
+if ( false !== ($content = $browser->temp_read('return_down',sha1($arr['url'])) ) ) {
 	if ( !$content = @unserialize($content) ){
-		error_show('文件信息损坏(1),请重新下载。('.$_GET['z'].')');
+		error_show('文件信息损坏(122),请重新下载。('.$_GET['z'].')');
 	}
 }else{
-	error_show('文件信息丢失(2),请重新下载。('.$_GET['z'].')');
+	error_show('文件信息丢失(222),请重新下载。('.$_GET['z'].')');
 }
 if ( $content['size'] > $b_set['tdown'] ){
 	error_show('当前系统不允许中转下载大于'.bitsize($b_set['tdown']).'的文件。('.$_GET['z'].')');
 }
-$str = 'disk.php/d/'.id2password($_GET['z'],'4hr5h5da').'/'.urlencode($content['name']);
+if ( $b_set['server_method'] == 'ace' ){
+	$str = 'disk.php?/d/'.id2password($_GET['z'],'4hr5h5da').'/'.urlencode($content['name']);
+}else{
+	$str = 'disk.php/d/'.id2password($_GET['z'],'4hr5h5da').'/'.urlencode($content['name']);
+}
 
 header('location: '.$str);
 exit;

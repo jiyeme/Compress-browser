@@ -5,7 +5,7 @@ $up_id = isset($_GET['uid']) ? (float)$_GET['uid'] : 0;
 $title = isset($_POST['title']) ? ubb_copy(strtolower(trim(fix_r_n_t($_POST['title'])))) : '';
 $browser->template_top('新建目录');
 $the_title = '';
-if ( $up_id<>0 ){
+if ( $up_id!=0 ){
 	$dir = $browser->db->fetch_first('SELECT title,oid FROM `disk_dir` WHERE uid='.$disk['id'].' AND id='.$up_id);
 	if ( !$dir ){
 		echo '错误：文件夹不存在！<br/>';

@@ -1,6 +1,6 @@
 <?php
 !defined('m') && header('location: /?r='.rand(0,999));
-if ( $_url <>'' ){
+if ( $_url !='' ){
 	echo '非法打包'.hr;
 	echo '<a href="disk.php?cmd=info&amp;do=unzip&amp;dir='.urlencode($my_dir).'&amp;id='.$id.$h.'">返回目录</a>';
 	$browser->template_foot();
@@ -16,10 +16,10 @@ unset($arr);
 
 if ( isset($_GET['yes']) ){
 	$err = false;
-	set_time_limit(300);
+	@set_time_limit(7200);
 	ignore_user_abort(true);
 	$size_old = filesize($_file);
-	include_once DIR.'inc/class/runtime.lib.php';
+	require_once ROOT_DIR.'inc/class/runtime.lib.php';
 	$rtime = new runtime();
 	$rtime->start();
 	if ( $dir['mime'] == 'mrp' ){
@@ -30,7 +30,7 @@ if ( isset($_GET['yes']) ){
 		}elseif ( !$pack_array ){
 			$err =  '文件列表为空,无法打包！<br/>';
 		}else{
-			include_once DIR.'inc/class/mrp.lib.php';
+			require_once ROOT_DIR.'inc/class/mrp.lib.php';
 			if ( $arr = @unserialize(file_get_contents($__dir.'_list')) ){
 				$new_arr = array();
 				foreach( $arr as $val){
@@ -47,10 +47,12 @@ if ( isset($_GET['yes']) ){
 		if ( !$pack_array ){
 			$err =  '文件列表为空,无法打包！<br/>';
 		}
-		include_once DIR.'inc/class/pclzip.lib.php';
+		require_once ROOT_DIR.'inc/class/pclzip.lib.php';
 		$zip = new PclZip($__file);
 		$zip->create($pack_array, PCLZIP_OPT_REMOVE_PATH, $__dir);
 	}
+	cloud_storage::upload($__file,'disk_' . $dir['file']);
+
 	if ( $err ){
 		echo $err;
 	}else{

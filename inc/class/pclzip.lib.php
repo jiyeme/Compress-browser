@@ -2038,7 +2038,7 @@ function pclzip_error_code($code){
       $v_descr['filename'] = PclZipUtilPathReduction($v_descr['filename']);
 
       // ----- Look for real file or folder
-      if (file_exists($v_descr['filename'])) {
+      if (file_Exists($v_descr['filename'])) {
         if (@is_file($v_descr['filename'])) {
           $v_descr['type'] = 'file';
         }
@@ -2507,7 +2507,7 @@ function pclzip_error_code($code){
 
       // ----- Check the filename
       if (   ($p_filedescr_list[$j]['type'] != 'virtual_file')
-          && (!file_exists($p_filedescr_list[$j]['filename']))) {
+          && (!file_Exists($p_filedescr_list[$j]['filename']))) {
         PclZip::privErrorLog(PCLZIP_ERR_MISSING_FILE, "File '".$p_filedescr_list[$j]['filename']."' does not exist");
         return PclZip::errorCode();
       }
@@ -3745,7 +3745,7 @@ function pclzip_error_code($code){
     if ($p_entry['status'] == 'ok') {
 
     // ----- Look for specific actions while the file exist
-    if (file_exists($p_entry['filename']))
+    if (file_Exists($p_entry['filename']))
     {
 
       // ----- Look if file is a directory

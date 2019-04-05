@@ -16,7 +16,7 @@ if ( isset($_GET['yes']) ){
 		echo '请正确输入文件夹名！';
 	}else{
 		$newname = $__tup.'/'.FixSysUrlCode($dirname);
-		if ( !file_exists($newname) && @rename($__turl,$newname) ){
+		if ( !file_Exists($newname) && @rename($__turl,$newname) ){
 			echo '文件夹重命名成功<br/>';
 			if ( $__up == ''){
 				$__url = urlencode($dirname);

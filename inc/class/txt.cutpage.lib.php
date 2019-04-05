@@ -11,10 +11,8 @@ class cutpage{
    public $page = 0;
    public $str = array();
 	function __construct($str,$slen){
-        $this->page = isset($_GET['ipage'])? (int)$_GET['ipage']:0;
-        if ( $this->page >= 1 ){
-            $this->page--;
-        }
+        $this->page = isset($_GET['ipage'])? (int)$_GET['ipage']-1:0;
+
         $len = strlen($str);
         if( $len <= $slen){
             $this->str[] = $str;
@@ -29,9 +27,11 @@ class cutpage{
            $chr = ord ($str[$i]);
            $count++;
            $i++;
-           if ($i >= $len)
+           if ($i >= $len){
+			   $this->str[] = $strs;
                break;
-           if ($chr & 0x80){
+		   }
+           if ( $chr & 0x80 ){
                $chr <<= 1;
                while ($chr & 0x80) {
                    $strs .= $str[$i];
@@ -44,17 +44,20 @@ class cutpage{
                 $strs = '';
            }
        }
+		if ( $this->page < 0 || $this->page > count($this->str) ){
+			$this->page = 0;
+		}
     }
 
-    function get_str(){
-        if ( isset($this->str[$this->page]) ){
-            return $this->str[$this->page];
+	function get_str(){
+		if ( isset($this->str[$this->page]) ){
+			return $this->str[$this->page];
         }elseif( isset($this->str[0]) ){
-            $this->page = 0;
+			$this->page = 0;
             return $this->str[0];
         }else{
-          $this->page = 0;
-           return '';
+			$this->page = 0;
+			return '';
         }
     }
 
@@ -73,7 +76,7 @@ class cutpage{
     }
 
     function set_url(){
-        parse_str($_SERVER["QUERY_STRING"], $arr_url);
+        parse_str($_SERVER['QUERY_STRING'], $arr_url);
         unset($arr_url["ipage"]);
         if (empty($arr_url)){
             $str = 'ipage=';

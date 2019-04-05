@@ -1,14 +1,31 @@
 <?php
 /*
  *
- *	浏览器核心类？
+ *	浏览器核心类
  *
- *	2011-4-16 @ jiuwap.cn
+ *	2012/7/26 星期四 @ jiuwap.cn
  *
  */
 
+error_reporting( E_ALL | E_STRICT );
 
-!defined('DIR') && define('DIR',$_SERVER['DOCUMENT_ROOT'].'/');
+//@ini_set('zlib.output_compression', 0);
+//@ini_set('implicit_flush', 1);
+function ob_gzip($content){
+	if ( !defined('no_ob_gzip') && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && !headers_sent() && extension_loaded('zlib') && strpos($_SERVER['HTTP_ACCEPT_ENCODING'],'gzip')!==false ){
+		$content = gzencode($content,9);
+		header('Content-Encoding: gzip');
+		header('Vary: Accept-Encoding');
+		header('Content-Length: '.strlen($content));
+	}
+	return $content;
+}
+ob_start('ob_gzip');//必须首先就执行否则出错？
+
+define('ROOT_DIR',substr(__FILE__,0,-strlen('inc/common.php')));
+
+require ROOT_DIR . 'inc/class/error.exception.php';
+
 if ( isset($_SERVER['HTTP_JIUWAPB']) ){
 	global $version;
 	header('Content-Type: text/html; charset=utf-8');
@@ -29,7 +46,7 @@ if ( get_magic_quotes_gpc() ){
 
 if(function_exists('ini_get')) {
 	function return_bytes($val) {
-		$val = trim($val);
+		$val = trim(intval($val));
 		$last = strtolower($val{strlen($val)-1});
 		switch($last) {
 			case 'g': $val *= 1024;
@@ -40,26 +57,24 @@ if(function_exists('ini_get')) {
 	}
 	$memorylimit = @ini_get('memory_limit');
 	if( $memorylimit && return_bytes($memorylimit) < 33554432 ) {
-		@ini_set('memory_limit', '128m');
+		@ini_set('memory_limit', '32m');
 	}
 }
 
-if ( !defined('DEFINED_JIUWAP') || DEFINED_JIUWAP <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
 
-define('DEFINED_TIANYIW','jiuwap.cn');
+require_once ROOT_DIR .'set_config/set_config.php';
+require_once ROOT_DIR .'inc/class/cloude.memcache.php';
+require_once ROOT_DIR .'inc/class/cloude.storage.php';
 
-include_once DIR. 'set_config/set_config.php';
-include_once DIR. 'set_config/ad/init.php';
-include_once DIR. 'inc/class/time.php';
-include_once DIR. 'inc/function.php';
-include_once DIR. 'inc/class/http.class.php';
-include_once DIR. 'inc/class/class.db.php';
-include_once DIR. 'inc/class/class.phplock.php';
-include_once DIR. 'inc/template.php';
+require_once ROOT_DIR .'set_config/ad/init.php';
+require_once ROOT_DIR .'inc/class/time.php';
+
+require_once ROOT_DIR .'inc/function.php';
+require_once ROOT_DIR .'inc/class/class.http.init.php';
+require_once ROOT_DIR .'inc/class/class.db.php';
+
+require_once ROOT_DIR .'inc/template.php';
+
 
 Class browser{
 	public $login_key = array();
@@ -92,19 +107,18 @@ Class browser{
 	public $num_look = 0;		//浏览页面数
 
 	public $template_foot = 0;		//底部模板
-	public $PHPLock = null;
 
 	function __construct(){
-		ob_start('ob_gzip');
-		qqagent_init();
+		//ob_start('ob_gzip');
+		qqagent_init();//捕捉QQ浏览器UA
 		global $b_set;
-		$this->db = new db($b_set['db']['server'],$b_set['db']['user'],$b_set['db']['pass'],$b_set['db']['table']);
+		$this->db = db::connect($b_set['db']['server'],$b_set['db']['user'],$b_set['db']['pass'],$b_set['db']['table']);
 		$this->rand = rand(1,9999);
 		$this->login_key = $this->_cookie_cut();
 		if (isset($this->login_key[0])){
 			$this->template = $this->login_key[0];
 		}
-		if ( $this->template<>0 && $this->template<>1 ){
+		if ( $this->template!=0 && $this->template!=1 ){
 			if ( IsWap2() ){
 				$this->template = 0;
 			}else{
@@ -116,6 +130,7 @@ Class browser{
 		}else{
 			define('hr','<hr/>');
 		}
+
 	}
 
 	function template_top($title,$refreshurl='',$return=false,$code='utf-8',$time=1){
@@ -143,7 +158,7 @@ Class browser{
 			$name = '';
 			$pass = '';
 		}
-		Setcookie('FREE', $this->template.';'.$name.';'.$pass,time_()+2592000);
+		Set_cookie('FREE', $this->template.';'.$name.';'.$pass,time_()+2592000);
 	}
 
 	function user_news($num=5){
@@ -156,25 +171,28 @@ Class browser{
 	}
 
 	function cookie_del(){
-		global $b_set;
 		if ( $this->uid ){
 			$this->db->query('DELETE FROM browser_cookies WHERE user_id='.$this->uid);
 		}
 		return true;
 	}
 
-
 	function cacheurl_del($type = 'url'){
 		if ( !$this->uid ){
 			return ;
 		}
-		global $b_set;
-		@unlink($b_set['utemp'].$this->uid.'/'.$type.'_key');
+
+		@cloud_memcache::set($this->uid.'_url_key',0);
+		@cloud_memcache::set($this->uid.'_pic_key',0);
+
+		return ;
+
 		if ( $type == 'url' ){
-			$this->db->delete('browser_caches','type=0 AND uid='.$this->uid);
+			//$this->db->delete('browser_caches','type=0 AND uid='.$this->uid);
 		}else{
-			deldir($b_set['utemp'].'pics/'.$this->uid,false);
-			$this->db->delete('browser_caches','type=1 AND uid='.$this->uid);
+			/* !!! todo 删除缓存文件 !!! */
+			//deldir($b_set['utemp'].'pics/'.$this->uid,false);
+			//$this->db->delete('browser_caches','type=1 AND uid='.$this->uid);
 		}
 	}
 
@@ -223,14 +241,10 @@ Class browser{
 	}
 
 	function copy_get($html,$start='',$end='',$nnn=0){
-		$html = str_ireplace('@','&at;at;',$html);
-		$html = str_ireplace('&copy;','©',$html);
-		$html = str_ireplace('&nbsp;',' ',$html);
-		$html = str_ireplace('<br/>','[/br/]', $html);
-		$html = str_ireplace('<br>','[/br/]', $html);
-		$html = str_ireplace('</p>','[/br/]', $html);
-		$html = str_ireplace('</table>','[/br/]', $html);
-		$html = str_ireplace('<br />','[/br/]', $html);
+		$html = str_replace('@','&at;at;',$html);
+		$html = str_replace('&copy;','©',$html);
+		$html = str_replace('&nbsp;',' ',$html);
+		$html = str_ireplace(array('<br/>','<br>','</p>','</table>','<br />'),'[/br/]', $html);
 		$html = preg_replace('@<!--(.*?)-->@','', $html);
 		$html = preg_replace('@<title(.*?)</title>@i','', $html);
 		$html = preg_replace('@<noscript(.*?)</noscript>@i','', $html);
@@ -245,7 +259,7 @@ Class browser{
 		$html = preg_replace('@</(h1|h2|h3|p|dt|dl|div|ul|td|tr|li|table|label|tbody)>@i','[/br/]', $html);
 		$html = preg_replace('@</(th|em|base|span|map|font|sup|dd|strong)>@i','', $html);
 		$html = preg_replace('@<(.*?)>@i','', $html);
-		$html = str_ireplace('&at;at;','@',$html);
+		$html = str_replace('&at;at;','@',$html);
 		$html = htmlspecialchars_decode($html);
 		while( strpos($html,'  ')){
 			$html = str_replace('  ',' ', $html);
@@ -258,42 +272,41 @@ Class browser{
 		}
 
 		$i = strrpos($html,'[/br/]');
-		if ( $i <> false && strlen($html) - $i === 6 ){
+		if ( $i != false && strlen($html) - $i === 6 ){
 			$html = substr($html,0,$i);
 		}
 
-		$nn = array('','[br/]','[br]','(br)','///','//','\\\\','<br>','<br/>',"\r\n");
+		$nn = array('','[br/]','[br]','(br)','///','//','\\\\','<br>','<br/>',"\r\n",' ');
 		$html = str_replace('[/br/]',$nn[$nnn], $html);
 		$end = trim($end);
 		$start = trim($start);
 		if ( $end == '' && $start == '' ){
 			//复制全部内容
 			return $html;
-		}elseif ( $end == '' && $start <> '' ) {
+		}elseif ( $end == '' && $start != '' ) {
 			//指定开头到结束
-			return substr($html,stripos($html,$start));
-		}elseif ( $end <> '' && $start == '' ) {
+			return substr($html,strpos($html,$start));
+		}elseif ( $end != '' && $start == '' ) {
 			//从开头到指定结束
-			return substr($html,0,stripos($html,$end)+strlen($end));
+			return substr($html,0,strpos($html,$end)+strlen($end));
 		}elseif ( !empty($_POST['end']) && !empty($_POST['start']) ) {
-			//制定开头和结束
-			return substr($html,stripos($html,$start),stripos(substr($html,stripos($html,$start)),$end)+strlen($end));
+			//指定开头和结束
+			return substr($html,strpos($html,$start),strpos(substr($html,strpos($html,$start)),$end)+strlen($end));
 		}else{
 			return '';
 		}
 	}
 
 	function cacheurl_set(){
-		global $b_set;
-		if ( $this->uid == 0 ){
+		/*if ( $this->uid == 0 ){
 			write_log(__FILE__,__line__,'UID丢失:`_set',false);
-		}
-		writefile($b_set['utemp'].$this->uid.'/url_key',$this->url_key);
-		writefile($b_set['utemp'].$this->uid.'/pic_key',$this->pic_key);
-		if ( $this->PHPLock ){
+		}*/
+		@cloud_memcache::set($this->uid.'_url_key',$this->url_key);
+		@cloud_memcache::set($this->uid.'_pic_key',$this->pic_key);
+		/*if ( $this->PHPLock ){
 			$this->PHPLock->unlock();
 			$this->PHPLock->endLock();
-		}
+		}*/
 	}
 
 	function fixlower($str){
@@ -303,27 +316,29 @@ Class browser{
 	}
 
 	function cache_add($type,$url,$referer=false,$mime=false){
-		global $b_set;
 		static $first = true;
 		if ( $first ){
 			if ( !$this->uid ){
 				return null;
 			}
-			$this->PHPLock = new PHPLock($b_set['utemp'].$this->uid.'/','bblock'.$this->uid);
-			$this->PHPLock->startLock ();
-			while( !$this->PHPLock->Lock() ){
-				sleep(0.5);
-			}
-			if ( false !== ($key = @file_get_contents($b_set['utemp'].$this->uid.'/url_key') )){
-				$this->url_key = (int)$key;
+			//$this->PHPLock = new PHPLock($b_set['utemp'].$this->uid.'/','bblock'.$this->uid);
+			//$this->PHPLock->startLock ();
+			//while( !$this->PHPLock->Lock() ){
+			//	sleep(0.5);
+			//}
+
+			if ( $key = @cloud_memcache::get($this->uid.'_url_key') ){
+				$this->url_key = $key;
 			}else{
 				$this->url_key = -1;
 			}
-			if ( false !== ($key = @file_get_contents($b_set['utemp'].$this->uid.'/pic_key') )){
-				$this->pic_key = (int)$key;
+
+			if ( $key = @cloud_memcache::get($this->uid.'_pic_key') ){
+				$this->pic_key = $key;
 			}else{
 				$this->pic_key = -1;
 			}
+
 			$first = false;
 		}
 
@@ -403,41 +418,33 @@ Class browser{
 
 	function site_lists($all=true){
 		$site = array();
-		$site[] = array('title' => 'Traum','url' => 'http://i.jysafe.cn');
-		$site[] = array('title' => 'MRPoid','url' => 'http://mrpoid.com');
-		include DIR. 'set_config/sites.php';
+		$site[] = array('title' => '玖玩','url' => 'http://jiuwap.cn');
+		//$site[] = array('title' => 'MRPQQ','url' => 'http://mrpqq.com');
+		@include ROOT_DIR.'set_config/sites.php';
 		return $site;
 	}
 
 	function history_del(){
-		global $b_set;
 		if ( !$this->uid ){
 			return;
 		}
 
-		$file_history_cache = $b_set['utemp'].$this->uid.'/history/cache';
-		@unlink($file_history_cache);
-		$file_history_key = $b_set['utemp'].$this->uid.'/history/key';
-		@unlink($file_history_key);
+		@cloud_memcache::set($this->uid.'_history_cache',serialize(array()));
+		@cloud_memcache::set($this->uid.'_history_key',0);
 	}
 
 	function history_add($title,$url,$content,$mime,$code,$html_size = 0,$pic_size = 0){
 		if ( !$this->uid ){
 			return null;
 		}
-		global $b_set;
-		$file_history_cache = $b_set['utemp'].$this->uid.'/history/cache';
-		$file_history_key = $b_set['utemp'].$this->uid.'/history/key';
-		if (false !== ( $var = @file_get_contents($file_history_key)) ){
-			$history_key = (int)$var;
-		}else{
+
+		$history_key = @cloud_memcache::get($this->uid.'_history_key');
+		if ( $history_key === false || $history_key >= 1000 ){
 			$history_key = -1;
 		}
 		$history_key++;
-		if ( $history_key >= 3000 ){
-			$history_key = 0;
-		}
-		writefile($file_history_key,$history_key);
+
+		@cloud_memcache::set($this->uid.'_history_key',$history_key);
 
 		$history = $this->history_get();
 		$key_new = num2short($history_key);
@@ -461,7 +468,7 @@ Class browser{
 								'url'		=>	$url,
 								'content'	=>	$content
 							);
-		writefile($file_history_cache,serialize($history));
+		@cloud_memcache::set($this->uid.'_history_cache',serialize($history));
 		$sql = '';
 		if ( $html_size > 0 ){
 			$sql .= ',num_size_html=num_size_html+'.$html_size;
@@ -477,15 +484,12 @@ Class browser{
 		if ( !$this->uid ){
 			return array();
 		}
-		global $b_set;
-		$file_history_cache = $b_set['utemp'].$this->uid.'/history/cache';
-		if ( $var = @file_get_contents($file_history_cache) ){
-			if ( !$history = @unserialize($var) ){
-				$history = array();
-			}
-		}else{
+
+		$history = @cloud_memcache::get($this->uid.'_history_cache');
+		if ( !$history || !$history = @unserialize($history)){
 			$history = array();
 		}
+
 		if ( $key !== false && isset($history[$key])){
 			$arr = $history[$key];
 			$arr['key'] = $key;
@@ -631,7 +635,7 @@ Class browser{
 	}
 
 	function user_logout(){
-		Setcookie('FREE', $this->template.';;',time_()+2592000);
+		Set_cookie('FREE', $this->template.';;',time_()+2592000);
 	}
 
 	function user_login_check(){
@@ -640,24 +644,7 @@ Class browser{
 			header('location: /login.php?r='.$this->rand);
 			exit;
 		}else{
-			if ( !file_exists($b_set['utemp'].$this->uid) ){
-				@mkdir($b_set['utemp'].$this->uid);
-				@chmod($b_set['utemp'].$this->uid,0777);
-			}
-			//if ( !file_exists($b_set['utemp'].$this->uid.'/cookie') ){
-			//	@mkdir($b_set['utemp'].$this->uid.'/cookie',0777);
-			//}
-			if ( !file_exists($b_set['utemp'].$this->uid.'/history') ){
-				@mkdir($b_set['utemp'].$this->uid.'/history');
-				@chmod($b_set['utemp'].$this->uid.'/history',0777);
-			}
-			if ( !file_exists($b_set['utemp'].'pics/'.$this->uid) ){
-				if ( !file_exists($b_set['utemp'].'pics') ){
-					@mkdir($b_set['utemp'].'pics',0777);
-				}
-				@mkdir($b_set['utemp'].'pics/'.$this->uid);
-				@chmod($b_set['utemp'].'pics/'.$this->uid,0777);
-			}
+
 			if ( !IsWap2() && $this->template == 1){
 				$browser->wap2wml = 3;
 			}
@@ -665,7 +652,9 @@ Class browser{
 	}
 
 	function set_ipagent_check($ip,$connecting = false){
-		if( !preg_match('/^[0-9a-zA-Z\_\-\:\.]*$/',$ip ) ){
+
+
+		if( !preg_match('/^[0-9a-zA-Z\_\-\:\.]*$/i',$ip ) ){
 			return false;
 		}
 		//$preg = "/\A((([0-9]?[0-9])|(1[0-9]{2})|(2[0-4][0-9])|(25[0-5]))\.){3}(([0-9]?[0-9])|(1[0-9]{2})|(2[0-4][0-9])|(25[0-5])):[0-9]{2,5}\Z/";
@@ -674,18 +663,18 @@ Class browser{
 		//}
 		if ( $connecting ){
 			$ip = explode(':',$ip);
-			$host = trim($ip[0]);
-			$port = trim($ip[1]);
-			global $b_set;
-			$httplib = new httplib();
-			$httplib->open('http://home.baidu.com/about/about.html',20,2);
-			$httplib->proxy($host,$port);
-			$httplib->send();
-			$header = $httplib->header();
-			if ( !isset($header['STATUS']) || $header['STATUS'] <>200 ){
+			$http = new httplib();
+			$http->set_timeout(20);
+			$http->open('http://home.baidu.com/about/about.html');
+			if ( !@$http->set_proxy(trim($ip[0]),trim($ip[1])) ){
 				return false;
 			}
-			$response = getUTFString($httplib->response());
+			$http->send();
+			$header = $http->get_headers();
+			if ( !isset($header['STATUS']) || $header['STATUS'] !=200 ){
+				return false;
+			}
+			$response = getUTFString($http->get_body());
 			if ( empty($response) || stripos($response,'<title>关于百度</title>') === false){
 				return false;
 			}
@@ -702,7 +691,7 @@ Class browser{
 		$this->db->update('browser_users',$array,'id='.$this->uid);
 	}
 
-	private function _set_default(){
+	function _set_default(){
 		$var = array(
 				'config_pic'		=>	'4',
 				'config_useragent'	=>	'0',
@@ -748,9 +737,7 @@ Class browser{
 			$this->template_foot = $var['template_foot'];
 
 			if ( $type === 0 ){
-                $this->login_key[1]=$name;
-                $this->login_key[2]=$pass;
-				Setcookie('FREE', $this->template.';'.$name.';'.$pass,time_()+2592000);
+				Set_cookie('FREE', $this->template.';'.$name.';'.$pass,time_()+2592000);
 			}
 			return true;
 		}
@@ -763,7 +750,7 @@ Class browser{
 		}
 		$var = $browser->db->fetch_first('SELECT pass,id FROM `browser_users` WHERE name="'.$name.'"');
 		if ( $var){
-			if ( $var['pass']<>$pass ){
+			if ( $var['pass']!=$pass ){
 				$browser->db->query('UPDATE `browser_users` SET pass="'.$pass.'" WHERE id='. $var['id']);
 				return true;
 			}
@@ -776,7 +763,7 @@ Class browser{
 			$pass = $pass1;
 		}
 		$error = false;
-		if ( $pass<>$pass1 ){
+		if ( $pass!=$pass1 ){
 			$error = '两次密码不一样。';
 		}else{
 			$error = $this->_user_name_check($name,$pass);
@@ -799,16 +786,17 @@ Class browser{
 			$var += $this->_set_default();
 			$this->db->insert('browser_users',$var);
 			if ( $sendcookie ){
-				Setcookie('FREE', $this->template.';'.$name.';'.$pass,time_()+2592000);
+				Set_cookie('FREE', $this->template.';'.$name.';'.$pass,time_()+2592000);
 			}
 		}
 		return $error;
 	}
-
+//ereg('^[0-9a-zA-Z\_]*$',$pass )
+//preg_match('/^[0-9a-zA-Z\_]*$/i',$name )
 	Function _user_name_check($name,$pass){
-		if( !preg_match('/^[0-9a-zA-Z\_]*$/',$name ) ){
+		if( !preg_match('/^[0-9a-zA-Z\_]*$/i',$name ) ){
 			return '账号必须为数字或者英文字符。';
-		}elseif( !preg_match('/^[0-9a-zA-Z\_]*$/',$pass ) ){
+		}elseif( !preg_match('/^[0-9a-zA-Z\_]*$/i',$name ) ){
 			return '密码必须为数字或者英文字符。';
 		}elseif( strlen($name)<5 || strlen($name)>15 ){
 			return '账号长度必须在5到15位之间。';
@@ -818,13 +806,6 @@ Class browser{
 			return false;
 		}
 	}
-
-
-	function db_safe_dropstr($str){
-		$str = str_replace(array('"','\''),'',$str);
-		return $str;
-	}
-
 
 	Function GetHost($h){
 		$h = strtolower('.'.$h);
@@ -846,20 +827,44 @@ Class browser{
 		return $h;
 	}
 
+
 	//提取COOKIE
-	function cookieGet($domain,$path){
+	function cookieGet($domain,$path,$getAll=false){
 		static $time = 0;
-		if ( !$time){
+		if ( !$time ) {
 			$time = time_();
 		}
+		if ( $domain == '' ){
+			$query = $this->db->query('SELECT * FROM browser_cookies WHERE user_id='.$this->uid);
+
+			$待选 = array();
+			while ( $data = $this->db->fetch_array($query) ){
+				if ( $data['expires'] < $time ){
+					$this->db->delete('browser_cookies','id='.$data['id']);
+				}else{
+					if ( $getAll ){
+						$data['value'] = urldecode($data['value']);
+						$待选[] = $data;
+					}else{
+						$待选[$data['key']] = urldecode($data['value']);
+					}
+				}
+			}
+			return $待选;
+		}
 		$domain = strtolower($domain);
+		$domains = explode('.',$domain);
 		$path = strtolower($path);
 		$domain_root = $this->GetHost($domain);
 
 		$待选 = array();
-		if ( $domain_root == $domain ){
+		if ( $domain_root == $domain || /*无点域名*/strpos($domain,'.') === false ){
 			$待选[] = '.'.$domain;
 			$待选[] = $domain;
+
+		}else if ( is_numeric(end($domains)) ){//IP
+			$待选[] = $domain;
+
 		}else{
 			$domain_root_num = substr_count($domain_root, '.');
 			$domains = substr($domain,0,strlen($domain) - strlen($domain_root) - 1);
@@ -869,14 +874,11 @@ Class browser{
 			$had = '.'.$domain_root;
 			$待选[] = $had;
 			foreach($domains as $k=>$tmp){
-				if ( $num == $k){
-					$待选[] = $had = $tmp.$had;
-				}else{
-					$had = $tmp.$had;
+				$had = $tmp . $had;
+				if ( $num != $k){
+					$had = '.'.$had;
 				}
-				if ( $num <> $k){
-					$待选[] = $had = '.'.$had;
-				}
+				$待选[] = $had;
 			}
 		}
 		foreach($待选 as &$tmp){
@@ -885,18 +887,25 @@ Class browser{
 		$待选 = implode(' OR ',$待选);
 		//echo $待选;exit;
 		$query = $this->db->query('SELECT id,`key`,value,path,expires FROM browser_cookies WHERE user_id='.$this->uid.' AND ( '.$待选.' )');
+
 		$待选 = array();
 		while ( $data = $this->db->fetch_array($query) ){
 			if ( $data['expires'] < $time ){
-				$this->db->delete('jiuwap_tools_browser_cookies','id='.$data['id']);
+				$this->db->delete('browser_cookies','id='.$data['id']);
 			}else{
-				if ( substr($path,0,strlen($data['path'])) == $data['path'] ){
-					$待选[$data['key']] = urldecode($data['value']);
+				if ( $data['path']=='/' || $data['path']==''  || substr($path,0,strlen($data['path'])) == $data['path'] ){
+					if ( $getAll ){
+						$data['value'] = urldecode($data['value']);
+						$待选[] = $data;
+					}else{
+						$待选[$data['key']] = urldecode($data['value']);
+					}
 				}
 			}
 		}
 		return $待选;
 	}
+
 
 	//保存更新COOKIE
 	function cookieSave($host,$domain,$key,$value,$path,$expires){
@@ -908,120 +917,257 @@ Class browser{
 		if ( $domain == '' ){
 			$domain = $host;
 		}else{
-			//非法设置有效域名
+			//非法设置有效域名(跨域)
 			$domain = strtolower($domain);
-			if ( $domain<>$host ){
+			if ( $domain != $host ){
 				$host1 = '.'.$host;
 				$domain1 = $domain;
-				if ( substr($domain,0,1) <> '.'  ){
+				if ( substr($domain,0,1) != '.'  ){
 					$domain1 = '.'.$domain1;
 				}
-				if ( substr($domain1,-strlen($host1))<>$host1 ) {
+				if ( substr($domain1,-strlen($host1))!=$host1 && substr($host1,-strlen($domain1))!=$domain1 ) {
 					return ;
 				}
 			}
 		}
 		if ( $expires <= $time ){
+			//echo $expires.'|'.$time;
 			//都过期了,还设置什么
 			$this->db->delete('browser_cookies','user_id='.$this->uid.' AND `key`="'.$key.'" AND path="'.$path.'" AND domain="'.$domain.'"');
 			return;
-		}
-		if ( $key === '' || $value === '' ){
-			//什么都木有
+		}else if ( $key === '' || $value === '' ){
+			//坑爹，什么都木有
 			return ;
 		}
 		$path = strtolower($path);
 		$data = array(
 			'user_id' => $this->uid,
-			'domain' => $this->db_safe_dropstr($domain),
-			'path' => $this->db_safe_dropstr($path),
-			'key' => $this->db_safe_dropstr($key),
+			'domain' => $this->db->escape_string($domain),
+			'path' => $this->db->escape_string($path),
+			'key' => $this->db->escape_string($key),
 			'value' => urlencode($value),
 			'expires' => $expires,
 		);
 		$this->db->replace('browser_cookies', $data ,'user_id='.$this->uid.' AND `key`="'.$key.'" AND path="'.$path.'" AND domain="'.$domain.'"');
 	}
 
-
 	public function __destory(){
-		if ( $this->PHPLock ){
+		//测试得出此析构函数无法被执行。
+		//echo 'aa';
+		/*if ( $this->PHPLock ){
 			$this->PHPLock->unlock();
 			$this->PHPLock->endLock();
-		}
+		}*/
 	}
 
 	function selectBrowserUA(){
 		global $http,$HTTP_Q_UA,$HTTP_Q_AUTH,$HTTP_Q_GUID,$url_A,$version;
 		switch ($this->useragent){
 		case 0://QQ浏览器
-			$http->header('User-Agent', 'TTMobile/09.03.18/symbianOS9.1 Series60/3.0 Nokia6120cAP3.03') ;
+			$http->put_header('User-Agent', 'TTMobile/09.03.18/symbianOS9.1 Series60/3.0 Nokia6120cAP3.03') ;
 			if ( substr(strtolower($url_A['host']),strlen($url_A['host'])-6)=='qq.com' ){
-				$HTTP_Q_UA && $http->header('Q-UA', $HTTP_Q_UA) ;
-				$HTTP_Q_AUTH && $http->header('Q-AUTH', $HTTP_Q_AUTH) ;
-				$HTTP_Q_GUID && $http->header('Q-GUID', $HTTP_Q_GUID) ;
+				$HTTP_Q_UA && $http->put_header('Q-UA', $HTTP_Q_UA) ;
+				$HTTP_Q_AUTH && $http->put_header('Q-AUTH', $HTTP_Q_AUTH) ;
+				$HTTP_Q_GUID && $http->put_header('Q-GUID', $HTTP_Q_GUID) ;
 			}
-			$http->header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
+			$http->put_header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
 			break;
 		case 1://UC浏览器
-			$http->header('User-Agent', 'Nokia5230/UCWEB7.4.0.57/50/999') ;
-			$http->header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
+			$http->put_header('User-Agent', 'Nokia5230/UCWEB7.4.0.57/50/999') ;
+			$http->put_header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
 			break;
 		case 2://IE浏览器
-			$http->header('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322)') ;
+			$http->put_header('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322)') ;
 			break;
 		case 3://FF浏览器
-			$http->header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.4) Gecko/20100413 Firefox/3.6.4') ;
+			$http->put_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.2.4) Gecko/20100413 Firefox/3.6.4') ;
 			break;
 		case 4://OP浏览器
-			$http->header('User-Agent', 'Opera/9.80 (Windows NT 5.1; U; zh-cn) Presto/2.6.30 Version/10.63') ;
+			$http->put_header('User-Agent', 'Opera/9.80 (Windows NT 5.1; U; zh-cn) Presto/2.6.30 Version/10.63') ;
 			break;
 		case 6://移动模拟
-			$http->header('User-Agent', 'Mozilla/5.0 (Nokia5800 XpressMusic)UC ApplieWebkit(Gecko) Safari/530') ;
-			$http->header('x-wap-profile','http://nds1.nds.nokia.com/uaprof/N6670r100.xml');
-			$http->header('x-network-info','GPRS,8615006538888,218.201.170.205,cmwap,unsecured');
-			$http->header('x-nokia-gateway-id','NWG/4.1/Build4.1.04');
-			$http->header('x-up-calling-line-id','8615006538888');
-			$http->header('x-up-subno','8615006538888');
-			$http->header('x-nokia-msisdn','8615006538888');
-			$http->header('x-up-bearer-type','GPRS/EDGE');
-			$http->header('x-nokia-connection-mode','TCP');
-			$http->header('x-source-id','BJGGSN06BMT-CSK');
-			$http->header('x-forwarded-for','218.201.170.205');
-			$http->header('client-ip','218.201.170.205');
-			$http->header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
+			$http->put_header('User-Agent', 'Mozilla/5.0 (Nokia5800 XpressMusic)UC ApplieWebkit(Gecko) Safari/530') ;
+			$http->put_header('x-wap-profile','http://nds1.nds.nokia.com/uaprof/N6670r100.xml');
+			$http->put_header('x-network-info','GPRS,8615006538888,218.201.170.205,cmwap,unsecured');
+			$http->put_header('x-nokia-gateway-id','NWG/4.1/Build4.1.04');
+			$http->put_header('x-up-calling-line-id','8615006538888');
+			$http->put_header('x-up-subno','8615006538888');
+			$http->put_header('x-nokia-msisdn','8615006538888');
+			$http->put_header('x-up-bearer-type','GPRS/EDGE');
+			$http->put_header('x-nokia-connection-mode','TCP');
+			$http->put_header('x-source-id','BJGGSN06BMT-CSK');
+			$http->put_header('x-forwarded-for','218.201.170.205');
+			$http->put_header('client-ip','218.201.170.205');
+			$http->put_header('via','WTP/1.1 +-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
 			break;
 		case 7://iphone
-			$http->header('User-Agent', 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7') ;
+			$http->put_header('User-Agent', 'Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7') ;
 			break;
 		case 8://S60V5 QQ浏览器
-			$http->header('User-Agent', 'MQQBrowser/2.0 (Nokia5230;SymbianOS/9.1 Series60/3.0)') ;
-			$http->header('Q-UA', 'SQB22_GA/220441&SMTT_3/020100&SYM5&224014&Nokia5230&0&5775&V3') ;
-			if ( substr(strtolower($url_A['host']),strlen($url_A['host'])-6)=='qq.com' ){
-				$HTTP_Q_AUTH && $http->header('Q-AUTH', $HTTP_Q_AUTH) ;
-				$HTTP_Q_GUID && $http->header('Q-GUID', $HTTP_Q_GUID) ;
+			$http->put_header('User-Agent', 'MQQBrowser/2.0 (Nokia5230;SymbianOS/9.1 Series60/3.0)') ;
+			$http->put_header('Q-UA', 'SQB22_GA/220441&SMTT_3/020100&SYM5&224014&Nokia5230&0&5775&V3') ;
+			global $b_set;
+			if ( $b_set['switch']['qqua'] ){
+				$HTTP_Q_AUTH && $http->put_header('Q-AUTH', $HTTP_Q_AUTH) ;
+				$HTTP_Q_GUID && $http->put_header('Q-GUID', $HTTP_Q_GUID) ;
 			}
 			break;
 		case 9://JIUWAP浏览器特权
-			$http->header('User-Agent', 'JIUWAP/'.$version.' (zh-cn; java; wap; php; tianyiw;)') ;
-			$http->header('via','WTP/1.1 mm.jiuwap.cn('.$version.')');
-			$http->header('Q-UA', 'SQB22_GA/220441&SMTT_3/020100&SYM5&224014&JIUWAP&0&5775&'.$version) ;
+			$http->put_header('User-Agent', 'JIUWAP/'.$version.' (zh-cn; java; wap; php; tianyiw;)') ;
+			$http->put_header('via','WTP/1.1 mm.jiuwap.cn('.$version.')');
+			$http->put_header('Q-UA', 'SQB22_GA/220441&SMTT_3/020100&SYM5&224014&JIUWAP&0&5775&'.$version) ;
 			if ( substr(strtolower($url_A['host']),strlen($url_A['host'])-6)=='qq.com' ){
-				$HTTP_Q_AUTH && $http->header('Q-AUTH', $HTTP_Q_AUTH) ;
-				$HTTP_Q_GUID && $http->header('Q-GUID', $HTTP_Q_GUID) ;
+				$HTTP_Q_AUTH && $http->put_header('Q-AUTH', $HTTP_Q_AUTH) ;
+				$HTTP_Q_GUID && $http->put_header('Q-GUID', $HTTP_Q_GUID) ;
 			}
 			break;
-		case 10://Google浏览器
-			$http->header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.204 Safari/537.36') ;
-			//$http->header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
+		case 10://Chrome浏览器
+			$http->put_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.204 Safari/537.36') ;
 			break;
-			//Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.204 Safari/537.36
 		default:
 			//JIUWAP浏览器
-			$http->header('User-Agent', 'JIUWAP/'.$version.' (zh-cn; symbianOS9.1; Series60/3.0; Nokia6120cAP3.03)') ;
-			$http->header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
+			$http->put_header('User-Agent', 'JIUWAP/'.$version.' (zh-cn; symbianOS9.1; Series60/3.0; Nokia6120cAP3.03)') ;
+			$http->put_header('via','WTP/1.1 BJBJ-P-GW13-WAP.bj.monternet.com (Nokia WAP Gateway 4.1 CD1/ECD13_D/4.1.04)');
 			break;
-			
 		}
+	}
+
+
+	function tempfile_write($file,$content){
+		cloud_storage::write('tmp2_' .$file,$content);
+		$this->db->replace('browser_temps_file', array('uid'=>$this->uid,'file'=>$file,'time'=>time_()) ,'uid='.$this->uid.' AND `file`="'.$file.'"');
+	}
+
+	function tempfile_read($file){
+		$var = $this->db->fetch_first('SELECT id,`file`,`time` FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"');
+
+		if ( $var === false ){
+			return false;
+		}else if ( $var['time'] < time_() - 1 * 24 * 60 * 60 ){
+			$this->db->delete('browser_temps_file', 'id='.$var['id'] );
+			return false;
+		}else{
+			return @cloud_storage::read('tmp2_' .$file);
+		}
+	}
+
+	function tempfile_exists($file){
+		$var = $this->db->fetch_first('SELECT id,`file`,`time` FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"');
+
+		if ( $var === false ){
+			return false;
+		}else if ( $var['time'] < time_() - 1 * 24 * 60 * 60 ){
+			$this->db->delete('browser_temps_file', 'id='.$var['id'] );
+			return false;
+		}else{
+			return @cloud_storage::exists('tmp2_' .$file);
+		}
+	}
+
+	function tempfile_delete($file = false){
+		if ( $file === false || $file === true ){
+			$query = $this->db->query('SELECT id,`file` FROM `browser_temps_file` WHERE `time`<' .( time_() - 7 * 24 * 60 * 60)  .' ORDER BY id');
+			while ( $var = $this->db->fetch_array($query) ){
+				@cloud_storage::delete('tmp2_' .$var['file']);
+				$this->db->delete('browser_temps_file', 'id='.$var['id'] );
+			}
+
+		}else{
+			$var = $this->db->fetch_first('SELECT id FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"');
+			if ( $var ){
+				@cloud_storage::delete('tmp2_' .$file);
+				$this->db->delete('browser_temps_file', 'id='.$var['id'] );
+			}
+		}
+	}
+
+
+
+	function temp_write($type,$key,$value){
+		$value = $this->db->escape_string($value);
+		$this->db->replace('browser_temps', array('uid'=>$this->uid,'type'=>$type,'key'=>$key,'value'=>$value,'time'=>time_()) ,'uid='.$this->uid.' AND `key`="'.$key.'" AND `type`="'.$type.'"');
+	}
+
+	function temp_read($type,$key,$value=false){
+		$value = $this->db->escape_string($value);
+		$var = $this->db->fetch_first('SELECT `value`,`time` FROM `browser_temps` WHERE uid='.$this->uid.' AND `key`="'.$key.'" AND `type`="'.$type.'"');
+		if ( $var === false ){
+			$var = $value;
+		}else if ( $var['time'] < time_() - 7 * 24 * 60 * 60 ){
+			$this->db->delete('browser_temps', 'uid='.$this->uid.' AND `key`="'.$key.'" AND `type`="'.$type.'"');
+			$var = $value;
+		}else{
+			$var = $var['value'];
+		}
+
+		return $var;
+	}
+
+	function temp_clean($type=false,$uid=0){
+		if ( $type === true ){
+			$this->db->delete('browser_temps');
+		}else if ( $type ){
+			if ( $uid == 0 ){
+				$this->db->delete('browser_temps', '`type`="'.$type.'" OR `time`<' .( time_() - 7 * 24 * 60 * 60) );
+			}else{
+				$this->db->delete('browser_temps', '`type`="'.$type.'" AND uid='.$uid.' OR `time`<' .( time_() - 7 * 24 * 60 * 60) );
+			}
+		}else{
+			$this->db->delete('browser_temps', '`time`<' .( time_() - 7 * 24 * 60 * 60) );
+		}
+	}
+	function quickLogin_set(){
+		$token = cloud_memcache::get('tmp_quicklogin_' . $this->uid);
+		echo $token;exit;
+	}
+
+	function quickLogin_login($type,$token){
+		//$type = $type=='qq'?0:1;
+		$var = $this->db->fetch_first('SELECT `uid`,`time` FROM `browser_users_quicklogin` WHERE `key`="'.$token.'" AND `type`="'.$type.'"');
+		if ( $var ){
+			//if ( $var['time'] < time_()-3*30*24*60*60 ){
+				//token过期
+			//	return false;
+			//}
+
+			$var2 = $this->db->fetch_first('SELECT `name`,`pass` FROM `browser_users` WHERE `id`='.$var['uid']);
+			if ( $var2 ){
+				//直接进行登陆罢了
+				$this->user_login($var2['name'],$var2['pass']);
+				return true;
+			}else{
+				//用户不存在
+				return false;
+			}
+
+		}else{
+			//不存在或过期
+			return false;
+		}
+	}
+
+	//得到全部的DNS，包含系统内设的。
+	function dns_getAll(){
+		global $b_set;
+		$dns = array();
+		@include(ROOT_DIR . 'set_config/set_dns.php');
+		if ( !$b_set['switch']['dns'] ){
+			return $dns;
+		}
+		$query = $this->db->query('SELECT `domain`,`target` FROM browser_dns WHERE uid='.$this->uid .' ORDER BY id ASC' );
+		while ( $data = $this->db->fetch_array($query) ){
+			$dns[$data['domain']] = $data['target'];
+		}
+		return $dns;
+	}
+
+	function dns_getMy(){
+		$dns = array();
+		$query = $this->db->query('SELECT `id`,`domain`,`target` FROM browser_dns WHERE uid='.$this->uid .' ORDER BY id ASC' );
+		while ( $data = $this->db->fetch_array($query) ){
+			$dns[] = $data;
+		}
+		return $dns;
 	}
 }
 

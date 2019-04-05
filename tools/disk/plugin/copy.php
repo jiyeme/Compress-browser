@@ -4,7 +4,7 @@
 
 if ( isset($_GET['yes'])){
 	$oid = isset($_POST['oid']) ? (float)($_POST['oid']) : 0;
-	if ( $oid <>0 && !$browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE id='.$oid) ){
+	if ( $oid !=0 && !$browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE id='.$oid) ){
 		echo '复制失败，目标目录不存在！';
 	}else{
 		$dirs = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE oid='.$oid.' AND title="'.$dir['title'].'" AND uid='.$disk['id']);
@@ -14,10 +14,11 @@ if ( isset($_GET['yes'])){
 		}
 		$mime = get_short_file_mime($dir['title']);
 		$the_save_file = time_().'_'.rand(10000,99999);
-		if ( $mime <> ''){
+		if ( $mime != ''){
 			$the_save_file .= '_'.$mime;
 		}
-		copy($b_set['dfforever'].$dir['file'],$b_set['dfforever'].$the_save_file);
+
+		cloud_storage::copy('disk_' . $dir['file'],'disk_' . $the_save_file);
 		$arr = array(
 				'oid'	=>	$oid,
 				'uid'	=>	$disk['id'],

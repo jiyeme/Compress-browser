@@ -1,9 +1,12 @@
 <?php
 !defined('m') && header('location: /?r='.rand(0,999));
 if ( isset($_GET['yes']) ){
+
 	@ob_end_clean();
 	@ob_start();
-	$filename = $b_set['dfforever'].$dir['file'];
+	$filename = cloud_storage::localname('tmp_' . rand(0,999) . time());
+	$filename = @cloud_storage::download_tmp('disk_' . $dir['file'],$filename );
+//	echo $filename;exit;
 	$arr = GetImageSize($filename);
 	if ( $arr === false ){
 		header('HTTP/1.0 400 Not Found');
@@ -33,7 +36,7 @@ if ( isset($_GET['yes']) ){
 	$srcW = ImageSX($im);
 	$srcH = ImageSY($im);
 	$ni = imagecreatetruecolor($width,$height);
-	if ($arr[2]<>6){
+	if ($arr[2]!=6){
 		imagealphablending($ni,false);
 	}
 	if ($arr[2]==1){
@@ -50,7 +53,7 @@ if ( isset($_GET['yes']) ){
 
 echo '查看图片'.hr;
 if ( mime_ispic($dir['mime']) ){
-	echo '<img src="disk.php?cmd=info&amp;do=picread&amp;yes=yes&amp;id='.$id.$h.'" alt="缩略图"/><br/>查看原图请下载图片';
+	echo '<img src="disk.php?cmd=info&amp;do=picread&amp;yes=yes&amp;id='.$id.$h.'&amp;file='.urlencode($dir['title']).'" alt="缩略图"/><br/>查看原图请下载图片';
 }else{
 	echo '不支持此文件';
 }

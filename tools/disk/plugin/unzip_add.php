@@ -17,7 +17,9 @@ if ( isset($_GET['yes']) ){
 			}
 			$new_file = $__turl.'/'.FixSysUrlCode($filename);
 			$isadd = !@unlink($new_file);
-			@copy($b_set['dfforever'].$file['file'],$new_file);
+
+			file_put_contents($new_file,cloud_storage::read('disk_' . $file['file']));
+
 			if ( $__url != '' ){
 				$__url .= '%2F';
 			}

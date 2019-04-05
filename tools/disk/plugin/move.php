@@ -5,7 +5,7 @@ if ( isset($_GET['yes'])){
 	$oid = isset($_POST['oid']) ? (float)($_POST['oid']) : 0;
 	if ( $oid == $dir['oid'] ){
 		echo '移动完成。';
-	}elseif ( $oid <>0 && !$browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE id='.$oid) ){
+	}elseif ( $oid !=0 && !$browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE id='.$oid) ){
 		echo '移动失败，目标目录不存在！';
 	}else{
 		$dirs = $browser->db->fetch_first('SELECT id FROM `disk_dir` WHERE oid='.$oid.' AND title="'.$dir['title'].'" AND uid='.$disk['id']);

@@ -1,12 +1,5 @@
 <?php
-if ( !defined('DIR') ){
-	die('hello world');
-}
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 $api = 'http://api.jiuwap.cn/browser_update/?host='.urlencode($_SERVER["SERVER_NAME"]).'&version='.$version.'&cmd=';
 
 $cmd = isset($_GET['cmd']) ? trim($_GET['cmd']) : '';

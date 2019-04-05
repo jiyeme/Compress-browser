@@ -1,6 +1,14 @@
 <?php
-define('DEFINED_JIUWAP','jiuwap.cn');
-include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+/*
+ *
+ *	浏览器->修改密码
+ *
+ *	2012/7/26 星期四 @ jiuwap.cn
+ *
+ */
+
+
+require 'inc/common.php';
 if ( isset($_GET['yes']) ){
 	$_POST['name'] = isset($_POST['name']) ? trim($_POST['name']) : NULL;
 	$_POST['pass'] = isset($_POST['pass']) ? trim($_POST['pass']) : NULL;

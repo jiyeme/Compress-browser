@@ -6,15 +6,11 @@
  *	2011-1-14 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
+
 
 !defined('m') && header('location: /?r='.rand(0,999));
 
-$html = ($http->response());//http_fixhtml
+$html = $http->get_body();
 if ( !$html ){
 	http_error($url,0,'网页内容为空白！');
 }
@@ -34,13 +30,15 @@ if ( stripos($html,'<wml>') ){
 	$mime = 'text/vnd.wap.wml';
 }
 
-include DIR. 'parse/ad/init_ad.php';
+require ROOT_DIR.'parse/ad/init_ad.php';
 
 if ( stripos($html,'<noscript')!==false  && stripos($html,'</noscript>')!==false  ){
 	$html = preg_replace('@<noscript(.*?)<\/noscript>@i','', $html);
 }
 if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
-	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function($i){return script_check_jump($i[1]);}, $html);
+    //traum
+    //$html = preg_replace('@<script(.*?)<\/script>@ies',"script_check_jump('\\1')", $html);
+	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function ($i){return script_check_jump($i[1]);}, $html);
 }
 
 if ( stripos($html,'<embed')!==false  && stripos($html,'</embed>')!==false  ){
@@ -52,19 +50,54 @@ if ( stripos($html,'<button')!==false  && stripos($html,'</button>')!==false  ){
 }
 
 if ( stripos($html,'<style')!==false  && stripos($html,'style>')!==false  ){
-	$html = preg_replace_callback('/<style(.*?)style>/i',function($i){return '<style'.fix_css($i[1]).'style>';}, $html);
+    //traum
+    //$html = preg_replace('@<style(.*?)style>@ies',"'<style'.fix_css('\\1').'style>'", $html);
+	$html = preg_replace_callback('/<style(.*?)style>/i',function ($i){return '<style'.fix_css($i[1]).'style>';}, $html);
 }
+$__wap = array('vnd.wap.wmlscriptc','vnd.wap.wml');
+$__web = array('xhtml+xml','text/html');
+$__html = array('text');
 
-if ( !isset($code) ){
+$ct = $header['CONTENT-TYPE'];
+if ( $ct ){
+	$ct = strtolower($ct);
+	//$this->content_type = $ct;
+	foreach($__wap as $t){
+		if ( strpos($ct,$t) !== false ){
+			$__web = array();
+			$__html = array();
+			$mime = 'text/vnd.wap.wml';
+			break;
+		}
+	}
+	foreach($__web as $t){
+		if ( strpos($ct,$t) !== false ){
+			$__html = array();
+			$mime = 'text/html';
+			break;
+		}
+	}
+	foreach($__html as $t){
+		if ( strpos($ct,$t) !== false ){
+			$mime = 'text/html';
+			break;
+		}
+	}
+	if ( ( $t = strpos($ct,'charset=') )!== false ){
+		$code = substr($ct,$t+8);
+	}else{
+		$code = GetCode($html);
+	}
+}else{
 	$code = GetCode($html);
-}
-if ( !isset($mime) ){
 	$mime = GetMime($html);
 }
+
 if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	$html = str_ireplace('</head>','', $html);
 	$html = str_ireplace('<head>','', $html);
-}elseif ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml' ){
+
+}elseif ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml' ){
 	$html = preg_replace('@<textarea(.*?)>(.*?)<\/textarea>@i','<textarea$1 value="$2">', $html);
 	$html = preg_replace('@<style(.*?)<\/style>@i','', $html);
 	if ( stripos($html,'<body') && stripos($html,'</body>')  ){
@@ -75,15 +108,19 @@ if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	$html = str_ireplace('</p>','<br/>', $html);
 }
 
-//jysafe
+
+//traum
 //$html = preg_replace('@<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>@ies', "check_xml('\\1','\\2')", $html);
 $html = preg_replace_callback('/<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
 
+//loginfo(htmlspecialchars_decode($html));
 $browser->cacheurl_set();
 
-//jysafe
+//traum
 //$html = preg_replace('@<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>@ies', "check_xml('\\1','\\2')", $html);
-//$html = preg_replace_callback('/<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
+$html = preg_replace_callback('/<([\/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){
+    return check_xml($i[1],$i[2]);
+}, $html);
 
 if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	//处理wml的表单转换成form
@@ -138,7 +175,8 @@ if ( $html_title=='' ){
 }
 
 $html = str_replace('</>','</a>',$html);
-if ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml' ){
+
+if ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml' ){
 	$html = preg_replace('@<title(.*?)<\/title>@i','', $html);
 	if ( isset($_html2wmp_jump)){
 		$html = str_ireplace('</head>','</head><card title="'.$html_title.'" ontimer="'.$_html2wmp_jump['url'].'"><timer value="'.$_html2wmp_jump['time'].'"/>', $html);
@@ -182,16 +220,17 @@ $html = str_replace('<head></head>','',$html);
 
 $html = str_ireplace('&at;at;','@',$html);
 
-if ( $code<>'utf-8'){
-	if ( $html_title<>'' ){
+if ( $code!='utf-8'){
+	if ( $html_title!='' ){
 		@$html_title = iconv($code,'utf-8//TRANSLIT', $html_title);
 	}
 }elseif ( strpos($html,'&#')!==false && strpos($html,';')!==false && $code == 'utf-8'){
     $html = unicode2utf8($html);
     $html_title = unicode2utf8($html_title);
 }
+
 if ( stripos($html,'<wml>')===false && stripos($html,'<html>')===false && stripos($html,'<card>')===false && stripos($html,'<head>')===false ){
-    $html = $browser->template_top('无标题','',true,$code).$html.$browser->template_foot(false,true,$code);
+    $html = $browser->template_top('无标题','',true,$code). $html . $browser->template_foot(false,true,$code);
 }
 
 $bottom_str = '';
@@ -202,4 +241,4 @@ $html_size_new = strlen($html);
 //历史记录
 $the_history_key = $browser->history_add($html_title,$url,$html,$mime,$code,$html_size_old-$html_size_new);
 
-include DIR. 'parse/parse_foot.php';
+require ROOT_DIR.'parse/parse_foot.php';

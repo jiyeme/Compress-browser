@@ -7,7 +7,7 @@ $code = isset($_POST['code']) ? (int)$_POST['code'] : 0;
 $content = isset($_POST['content']) ? ubb_copy($_POST['content']) : '';
 $browser->template_top('新建文本');
 $the_title = '';
-if ( $up_id<>0 ){
+if ( $up_id!=0 ){
 	$dir = $browser->db->fetch_first('SELECT title,oid FROM `disk_dir` WHERE uid='.$disk['id'].' AND id='.$up_id);
 	if ( !$dir ){
 		echo '错误：文件夹不存在！';
@@ -52,10 +52,10 @@ if ( isset($_GET['yes']) ){
 			}elseif ( $arr['size'] > $b_set['dlocal']) {
 				echo '错误：文件不得大于'.bitsize($b_set['dlocal']).'！';
 			}else{
-				writefile($b_set['dfforever'].$the_save_file,$content);
+				cloud_storage::write('disk_' . $the_save_file,$content);
 				$id = $browser->db->insert('disk_file',$arr,true);
 				if ( $id ){
-					$browser->db->query('UPDATE `disk_config` SET space_use=space_use+'.$arr['size'].' WHERE id='.$disk['id']);
+					disk_space_update(+$arr['size']);
 					echo '新建文件成功！<br/>查看<a href="disk.php?cmd=info&amp;id='.$id.'&amp;uid='.$up_id.$h.'">['.$title.']</a><br/>';
 					$browser->template_foot();
 				}else{
@@ -92,7 +92,7 @@ if ( $browser->template == 1 ){
 }else{
 	echo '<form action="disk.php?cmd=newtxt&amp;yes=yes&amp;uid='.$up_id.$h.'" method="post">
 	名称：<input name="title" type="text" value="'.$title.'"/><br/>
-	内容：<input name="content" type="text" value=""/><br/>
+	内容：<textarea name="content" cols="20" rows="3"></textarea><br/>
 	编码：<select name="code">
 		<option value="1">GB2312</option>
 		<option value="0" selected="selected">UTF-8</option>

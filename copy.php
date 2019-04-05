@@ -3,16 +3,15 @@
  *
  *	浏览器->剪切板
  *
- *	2011-1-14 @ jiuwap.cn
+ *	2012/7/26 星期四 @ jiuwap.cn
  *
  */
 
-define('DEFINED_JIUWAP','jiuwap.cn');
-include $_SERVER['DOCUMENT_ROOT'].'/inc/common.php';
+require_once 'inc/common.php';
 $browser->user_login_check();
 
 $h = isset($_GET['h']) ? $_GET['h'] : '';
-if ( $h <> ''){
+if ( $h != ''){
 	$au = '&amp;h='.$h;
 }else{
 	$au = '';
@@ -38,18 +37,18 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 		break;
 	case 'copy_content2':
 		$content = $arr['content'];
-		@$content = iconv($arr['code'],'utf-8//TRANSLIT', $content);
+		$content = @iconv($arr['code'],'utf-8//TRANSLIT', $content);
 		break;
 	}
 	unset($arr);
 	if ( $cmd == 'copy_content2'){
-		if ( $browser->copy_num() >= 20 ){
-			error_book('复制失败','复制失败(剪切板最大容纳20条，请进入剪切板清理内容)');
+		if ( $browser->copy_num() >= 25 ){
+			error_book('复制失败','复制失败(剪切板最大容纳25条，请进入剪切板清理内容)');
 		}
 		$start = isset($_POST['start']) ? $_POST['start'] : '';
 		$end = isset($_POST['end']) ? $_POST['end'] : '';
 		$nnn = isset($_POST['nnn']) ? (int)$_POST['nnn'] : 0;
-		if ( $nnn < 0 || $nnn > 9 ){
+		if ( $nnn < 0 || $nnn > 10 ){
 			$nnn = 0;
 		}
 		$type = '复制内容';
@@ -58,14 +57,14 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 	}
 }elseif ( $cmd == 'copy' ){
 	$browser->template_top('复制');
-	echo ''.$b_set['webtitle'].'-复制<br />';
+	//echo ''.$b_set['webtitle'].'-复制<br />';
+	echo '返回:<a href="/?h='.$h.'">网页</a>.';
+	echo '<a href="/?m='.$h.'">菜单</a>.';
+	echo '<a href="copy.php?h='.$h.'">剪切板</a><br/>';
+	echo hr;
 	echo '<a href="copy.php?cmd=copy_title&amp;h='.$h.'">复制网页标题</a><br/>';
 	echo '<a href="copy.php?cmd=copy_url&amp;h='.$h.'">复制网页地址</a><br/>';
 	echo '<a href="copy.php?cmd=copy_content&amp;h='.$h.'">复制网页内容</a>';
-	echo hr;
-	echo '返回:<a href="index.php?h='.$h.'">网页</a>.';
-	echo '<a href="index.php?m='.$h.'">菜单</a>.';
-	echo '<a href="copy.php?h='.$h.'">剪切板</a><br/>';
 	$browser->template_foot();
 }elseif ( $cmd == 'myadd' ){
 	$content = isset($_POST['content']) ? $_POST['content'] : '';
@@ -74,11 +73,11 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 		$cmd = '_copy_form_';
 	}else{
 		$browser->template_top('自写剪切板内容');
-		echo '返回：<a href="copy.php?h='.$h.'">剪切板</a>.';
-		if ( $h<>'' ){
-			echo '<a href="index.php?h='.$h.'">网页</a>.';
+		echo '返回:<a href="copy.php?h='.$h.'">剪切板</a>.';
+		if ( $h!='' ){
+			echo '<a href="/?h='.$h.'">网页</a>.';
 		}
-		echo '<a href="index.php?m='.$h.'">菜单</a>';
+		echo '<a href="/?m='.$h.'">菜单</a>';
 		echo hr;
 		echo '自写剪切板内容<br />';
 		if ( isset($_GET['yes']) && !$content ){
@@ -104,6 +103,11 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 
 }elseif ( $cmd == 'copy_content'){
 	$browser->template_top('复制内容');
+	echo '<a href="copy.php?cmd=copy&amp;h='.$h.'">返回</a>.';
+	echo '<a href="/?h='.$h.'">网页</a>.';
+	echo '<a href="/?m='.$h.'">菜单</a>.';
+	echo '<a href="copy.php?h='.$h.'">剪切板</a><br/>';
+	echo hr;
 	echo '复制内容'.hr;
 	if ( $browser->template == 1 ){
 		echo '
@@ -119,6 +123,7 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 			<option value="7">&lt;br&gt;</option>
 			<option value="8">&lt;br/&gt;</option>
 			<option value="0">无</option>
+			<option value="10">空格</option>
 			<option value="9" selected="selected">\r\n</option>
 		</select><br />
 		<anchor>
@@ -142,6 +147,7 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 			<option value="7">&lt;br&gt;</option>
 			<option value="8">&lt;br/&gt;</option>
 			<option value="0">无</option>
+			<option value="10">空格</option>
 			<option value="9" selected="selected">\r\n</option>
 		</select><br />
 		<input type="submit" value="复制"/><br />
@@ -150,23 +156,19 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 	echo hr;
 	echo '说明：复制网页里的某段文字，输入要复制的内容的开头和结束的部分文字，如果开头和结束都留空则复制整页内容！<br />';
 	echo '注意：只能复制您最后一次浏览网页内容，且不包括html代码，仅限文字部分。<br />';
-	echo '提示：如果网页内容里含有换行，则转换为您选择的换行代码！';
-	echo hr;
-	echo '<a href="copy.php?cmd=copy&amp;h='.$h.'">返回</a>.';
-	echo '<a href="index.php?h='.$h.'">网页</a>.';
-	echo '<a href="index.php?m='.$h.'">菜单</a>.';
-	echo '<a href="copy.php?h='.$h.'">剪切板</a><br/>';
+	echo '提示：如果网页内容里含有换行，则转换为您选择的换行代码！英文字母区分大小写。';
 	$browser->template_foot();
 
 }elseif ( $cmd == 'delall' ) {
 	$browser->template_top('清空剪切板');
 	$browser->copy_del();
-	echo '清理剪切板内容完毕。<br/>';
-	echo '返回：<a href="copy.php?h='.$h.'">剪切板</a>.';
-	if ( $h<>'' ){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
+	echo '返回:<a href="copy.php?h='.$h.'">剪切板</a>.';
+	if ( $h!='' ){
+		echo '<a href="/?h='.$h.'">网页</a>.';
 	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>';
+	echo '<a href="/?m='.$h.'">菜单</a>';
+	echo hr;
+	echo '清理剪切板内容完毕。';
 
 	$browser->template_foot();
 
@@ -177,11 +179,11 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 		error_book('提示','该剪切板内容不存在，或者已被删除。');
 	}
 	$browser->template_top('删除剪切板');
-	echo '<a href="copy.php?h='.$h.'">剪切板</a>.';
-	if ( $h<>''){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
+	echo '返回:<a href="copy.php?h='.$h.'">剪切板</a>.';
+	if ( $h!=''){
+		echo '<a href="/?h='.$h.'">网页</a>.';
 	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>';
+	echo '<a href="/?m='.$h.'">菜单</a>';
 	echo '<br/>';
 
 
@@ -209,10 +211,10 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 
 	$browser->template_top('剪切板内容');
 	echo '<a href="copy.php?h='.$h.'">剪切板</a>.';
-	if ( $h<>''){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
+	if ( $h!=''){
+		echo '<a href="/?h='.$h.'">网页</a>.';
 	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>';
+	echo '<a href="/?m='.$h.'">菜单</a>';
 	echo hr;
 	echo $str.'<br/>';
 	echo '<a>[copy='.$id.']</a><a href="copy.php?cmd=look&amp;id='.$id.'&amp;h='.$h.'">查看</a><br/>';
@@ -227,11 +229,11 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 	$key = $arr['id'];
 	$content = $arr['content'];
 	$browser->template_top('剪切板内容');
-	echo '<a href="copy.php?h='.$h.'">剪切板</a>.';
-	if ( $h<>''){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
+	echo '返回:<a href="copy.php?h='.$h.'">剪切板</a>.';
+	if ( $h!=''){
+		echo '<a href="/?h='.$h.'">网页</a>.';
 	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>';
+	echo '<a href="/?m='.$h.'">菜单</a>';
 	echo hr;
 	if ( isset($_GET['change'])){
 		if ( $browser->template == 1 ){
@@ -272,11 +274,12 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 	$arr = $browser->copy_lists();
 	$browser->template_top('剪切板');
 	echo '返回:';
-	if ( $h <> '' ){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
+	echo '<a href="copy.php?cmd=copy&m='.$h.'">复制</a>.';
+	if ( $h != '' ){
+		echo '<a href="/?h='.$h.'">网页</a>.';
 	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>.';
-	echo '<a href="index.php">首页</a>'.hr;
+	echo '<a href="/?m='.$h.'">菜单</a>.';
+	echo '<a href="/">首页</a>'.hr;
 	echo '<a href="copy.php?cmd=myadd&amp;h='.$h.'">自写</a>.';
 	echo '<a href="copy.php?cmd=delall&amp;h='.$h.'">清空</a>('.$arr[0].'条)';
 	echo hr;
@@ -287,7 +290,7 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 			if ( strlen($val['content'])<=50 ){
 				$val['content'] = $val['content'];
 			}else{
-				$val['content'] = fixchinese(substr($val['content'],0,10).'…'.substr($val['content'],strlen($val['content']) - 10));
+				$val['content'] = str_fix_chinese(substr($val['content'],0,10).'…'.substr($val['content'],strlen($val['content']) - 10));
 			}
 			echo '['.$val['id'].']<a href="copy.php?cmd=look&amp;h='.$h.'&amp;id='.$val['id'].'">'.$val['content'].'</a><br/>';
 		}
@@ -300,18 +303,22 @@ if ( $cmd == 'copy_title' || $cmd == 'copy_content2' || $cmd == 'copy_url'){
 if ( $cmd == '_copy_form_'){
 	$key = $browser->copy_add($content);
 	$content = htmlspecialchars($content);
-	$browser->template_top($type);
 	if ( strlen($content)>50 ){
-		$content = fixchinese(substr($content,0,10).'…'.substr($content,strlen($content) - 10));
+		$content = str_fix_chinese(substr($content,0,10).'…'.substr($content,strlen($content) - 10));
 	}
-	echo $type.'成功<br />-------------<br />';
+
+	$browser->template_top($type);
+	echo '返回:<a href="copy.php?cmd=copy&h='.$h.'">复制</a>.';
+	if ( $h!=''){
+		echo '<a href="/?h='.$h.'">网页</a>.';
+	}
+	echo '<a href="/?m='.$h.'">菜单</a>.';
+	echo '<a href="copy.php?h='.$h.'">剪切板</a>';
+
+	echo hr;
+
+	echo $type.'成功<br />';
 	echo '查看：<a href="copy.php?cmd=look&amp;h='.$h.'&amp;id='.$key.'">'.$content.'</a>';
-	echo hr.'只需在文本框输入<a>[copy='.$key.']</a>，表单提交时即可粘贴。'.hr;
-	echo '<a href="copy.php?cmd=copy&amp;h='.$h.'">返回</a>.';
-	if ( $h<>''){
-		echo '<a href="index.php?h='.$h.'">网页</a>.';
-	}
-	echo '<a href="index.php?m='.$h.'">菜单</a>.';
-	echo '<a href="copy.php?h='.$h.'">剪切板</a><br/>';
+	echo hr.'只需在文本框输入<a>[copy='.$key.']</a>，表单提交时即可粘贴。';
 	$browser->template_foot();
 }

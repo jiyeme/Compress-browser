@@ -7,15 +7,6 @@
 @ini_set("magic_quotes_runtime", 0);
 @ini_set("magic_quotes_sybase", 0);
 
-if ( !defined('DEFINED_JIUWAP') || DEFINED_JIUWAP <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
-
-define('DEFINED_TIANYIW','jiuwap.cn');
-
-define('DIR',$_SERVER['DOCUMENT_ROOT'].'/');
 
 /*$install_version = '20110831';
 $install_password = 'jiuwap';
@@ -130,7 +121,7 @@ function mkdirs($path, $mode = 0777){
 		for ($cc=0; $cc <= $c; $cc++) {
 			$thispath.=$dirs[$cc].'/';
 		}
-		if (!@file_exists($thispath)) {
+		if (!file_Exists($thispath)) {
 			@mkdir($thispath);
 			@chmod($thispath,$mode);
 		}

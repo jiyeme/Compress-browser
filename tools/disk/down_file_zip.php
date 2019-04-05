@@ -9,7 +9,7 @@
 
 !defined('m') && header('location: /?r='.rand(0,999));
 
-include_once DIR.'tools/disk/inc.php';
+require_once ROOT_DIR.'tools/disk/inc.php';
 
 $a = strpos($id,'|');
 if ( !$a ){
@@ -24,12 +24,12 @@ if ( !$content ){
 	error_show('文件不存在(1)');
 }
 
-$_dir = $b_set['dftemp'].md5($id.'_u').'/'.$file;
+$_dir = ROOT_DIR . 'temp/disk_temp/'.md5($id.'_u').'/'.$file;
 @$_dir = iconv('UTF-8',SYSFILECODE, $_dir);
-if ( file_exists($_dir) ){
+if ( file_Exists($_dir) ){
     @ob_end_clean();
     @ob_start();
-    @set_time_limit(0);
+    @set_time_limit(7200);
 	$content['title'] = basename($file);
 	$ua = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 	$encoded_filename = urlencode($content['title']);
@@ -45,14 +45,14 @@ if ( file_exists($_dir) ){
 	header('Content-Encoding: none');
 	Header('Content-Length: '.filesize($_dir));
 	Header('Content-Type: '.get_file_mime(get_short_file_mime($_dir)));
-	ob_flush();
+	@ob_flush();
 	flush();
 	if (!$fp = @fopen($_dir,'rb')){
 		exit;
 	}
 	while(!feof($fp)){
 		echo fread($fp,1024);
-		ob_flush();
+		@ob_flush();
 		flush();
 	}
 	fclose($fp);

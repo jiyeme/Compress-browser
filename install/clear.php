@@ -1,10 +1,7 @@
 <?php
-if ( !defined('DIR') ){
-	die('hello world');
-}
 
 
-@include DIR.'set_config/set_config.php';
+@include './set_config/set_config.php';
 if ( $version && $version<'20110901' || !isset($b_set['rootpassword']) ){
 	top('错误');
 	echo '<b>玖玩浏览器版本过低</b>';

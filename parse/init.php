@@ -6,15 +6,9 @@
  *	2011-4-3 @ jiuwap.cn
  *
  */
-if ( !defined('DEFINED_TIANYIW') || DEFINED_TIANYIW <> 'jiuwap.cn' ){
-	header('Content-Type: text/html; charset=utf-8');
-	echo '<a href="http://jiuwap.cn">error</a>';
-	exit;
-}
-
 !defined('m') && header('location: /?r='.rand(0,999));
 
-include_once DIR.'parse/function.php';
+require_once ROOT_DIR.'parse/function.php';
 
 if ( !in_array(strtolower(substr($url,0,7)),array('https:/','http://')) ) {
 	$url = 'http://'.$url;
@@ -40,8 +34,19 @@ unset($_POST);
 
 $http = new httplib();
 
+$http->set_dns($browser->dns_getAll());
+
 //建立FSOCKOPEN链接
-$http->open($url,30,5);
+$http->set_timeout(30);
+$http->set_location(5);
+
+$http->open($url);
+
+$url_A = $http->get_urls();
+
+if ( $url_A['ip'] === false ){
+    error_show('访问失败','错误：您访问的网站['.$url.']无法访问。<br/>原因：域名DNS解析失败。');
+}
 
 if ( isset($_SERVER['HTTP_REFERER']) ){
 	$a = strpos($_SERVER['HTTP_REFERER'],'/?');
@@ -50,7 +55,7 @@ if ( isset($_SERVER['HTTP_REFERER']) ){
 		if ( $a && strlen($a)<=2 ){
 			$a = $browser->cache_get('url',$cmd);
 			if ( $a ){
-				$http->referer($a);
+				$http->set_referer($a);
 			}
 		}
 	}
@@ -58,26 +63,24 @@ if ( isset($_SERVER['HTTP_REFERER']) ){
 }
 
 
-$url_A = $http->parse_url();
-
 //检测是否嵌套浏览
-include DIR.'set_config/set_forbidhost.php';
+include ROOT_DIR.'set_config/set_forbidhost.php';
 if ( in_array(strtolower($url_A['host']),$b_set['forbid']) && !stripos($url,$b_set['host'].'/self') ){
 	$str = '错误：您访问的网站['.$url_A['host'].']无法访问。<br/>原因：嵌套网页浏览器或目标网站不合法。';
     error_show('访问失败',$str);
 }
 
 //设置代理
-if( !empty($browser->ipagent) && $browser->ipagent_open == 1 ){
+if( $b_set['switch']['httpagent'] && !empty($browser->ipagent) && $browser->ipagent_open == 1 ){
 	$ip = explode(':',$browser->ipagent);
-	$http->proxy(trim($ip[0]),trim($ip[1]));
+	$http->set_proxy(trim($ip[0]),trim($ip[1]));
 	unset($ip);
 }
 
 //发送POST
 //网盘上传？
 if( isset($form_2diskup) && isset($_GET['fi']) ){
-    include_once DIR.'tools/disk/inc.php';
+    require_once ROOT_DIR.'tools/disk/inc.php';
     init_disk();
     $ups = 'file'.(float)$_GET['fi'].'_';
     $upn = strlen($ups);
@@ -99,12 +102,12 @@ if( isset($form_2diskup) && isset($_GET['fi']) ){
 						if ( $all_size > $b_set['tupload'] ) {
 							error_show('访问失败','错误：禁止访问。<br/>原因：上传文件过大，不得大于'.bitsize($b_set['tupload']).'。');
 						}
-						$dir['file'] = $b_set['dfforever'].$dir['file'];
-						$valcontent = @file_get_contents($dir['file']);
-						$http->file(substr($a,$upn).'['.$c.']',$dir['title'],$valcontent,get_file_mime($dir['mime']));
+
+						$valcontent = @cloud_storage::read('disk_' . $dir['file']);
+						$http->put_file_bystring(substr($a,$upn).'['.$c.']',$dir['title'],$valcontent,get_file_mime($dir['mime']));
 						unset($valcontent);
 					}else{
-						$http->post($a,ubb_copy($b));
+						$http->put_post($a,ubb_copy($b));
 					}
 				}
 			}else{
@@ -122,12 +125,11 @@ if( isset($form_2diskup) && isset($_GET['fi']) ){
 					if ( $all_size > $b_set['tupload'] ) {
 						error_show('访问失败','错误：禁止访问。<br/>原因：上传文件过大，不得大于'.bitsize($b_set['tupload']).'。');
 					}
-					$dir['file'] = $b_set['dfforever'].$dir['file'];
-					$valcontent = @file_get_contents($dir['file']);
-					$http->file(substr($a,$upn),$dir['title'],$valcontent,get_file_mime($dir['mime']));
+					$valcontent = @cloud_storage::read('disk_' . $dir['file']);
+					$http->put_file_bystring(substr($a,$upn),$dir['title'],$valcontent,get_file_mime($dir['mime']));
 					unset($valcontent);
 				}else{
-					$http->post($a,ubb_copy($b));
+					$http->put_post($a,ubb_copy($b));
 				}
 			}
         }
@@ -140,10 +142,10 @@ if( isset($form_2diskup) && isset($_GET['fi']) ){
         foreach($_post as $a => $b){
 			if ( is_array($b) ){
 				foreach($b as $c => $b){
-		            $http->post($a.'['.$c.']',ubb_copy($b));
+		            $http->put_post($a.'['.$c.']',ubb_copy($b));
 				}
 			}else{
-				$http->post($a,ubb_copy($b));
+				$http->put_post($a,ubb_copy($b));
 			}
         }
         unset($_post);
@@ -152,15 +154,16 @@ if( isset($form_2diskup) && isset($_GET['fi']) ){
 
 
 //读取数据库COOKIE
-$cookies = $browser->cookieGet($url_A['host'],$url_A['path']);
+
+$cookies = $browser->cookieGet($url_A['host'] ,$url_A['path']);
 foreach($cookies as $cookie_key=>$cookie_value){
-	$http->cookie($cookie_key,$cookie_value);
+	$http->put_cookie($cookie_key,$cookie_value);
 }
 unset($cookies,$cookie_key,$cookie_value);
 
 
 //上传文件
-if ( $_FILES ){
+if ( $b_set['switch']['upload'] && $_FILES ){
 	$all_size = 0;
 	foreach ( $_FILES as $name=>$value){
         if ( is_array($value['size']) ){
@@ -180,12 +183,12 @@ if ( $_FILES ){
         if ( is_array($val['name']) ){
             foreach ( $val['name'] as $a=>$b){
                 if ( $val['content'][$a] = @file_get_contents($val['tmp_name'][$a]) ){
-                    $http->file($name.'['.$a.']',$val['name'][$a],$val['content'][$a],$val['type'][$a]);
+                    $http->put_file_bystring($name.'['.$a.']',$val['name'][$a],$val['content'][$a],$val['type'][$a]);
                 }
             }
         }else{
             if ( $val['content'] = @file_get_contents($val['tmp_name']) ){
-                $http->file($name,$val['name'],$val['content'],$val['type']);
+                $http->put_file_bystring($name,$val['name'],$val['content'],$val['type']);
             }
         }
 
@@ -195,15 +198,16 @@ if ( $_FILES ){
 }
 
 $browser->selectBrowserUA();
-$http->header('jiuwapb',$version);
+$http->put_header('jiuwapb',$version);
 
 //开始
 $http->send();
 
 //获取返回头信息
-$header = $http->header();
-$url_A = $http->parse_url($url);
-$url = $http->url();
+$header = $http->get_headers();
+$url_A = $http->get_urls();//$url_A = $http->parse_url($url);
+
+$url = $http->get_url();
 $fix_url_base = false;
 
 if ( isset($header['STATUS']) && $header['STATUS'] == '301' ){
@@ -212,8 +216,16 @@ if ( isset($header['STATUS']) && $header['STATUS'] == '301' ){
 }
 
 //检测是否为网页文件
-if ( !isset($is_css) && (!isset($header['CONTENT-TYPE']) || !http_ishtml($header['CONTENT-TYPE'])) ){
-	include DIR.'parse/parse_down.php';exit;
+if ( !isset($is_css) && ( !isset($header['CONTENT-TYPE']) ||
+						!( stripos($header['CONTENT-TYPE'],'text') ||
+							stripos($header['CONTENT-TYPE'],'xhtml') ||
+							stripos($header['CONTENT-TYPE'],'html') ||
+							stripos($header['CONTENT-TYPE'],'wml') ||
+							stripos($header['CONTENT-TYPE'],'plain') ||
+							stripos($header['CONTENT-TYPE'],'xml') ))
+	){
+	require ROOT_DIR.'parse/parse_down.php';
+	exit;
 
 }else{
 	//检测大小
@@ -229,7 +241,7 @@ foreach ( $header['COOKIE'] as $key => $value){
 
 unset($header['COOKIE']);
 if ( isset($is_css) ){
-	include DIR.'parse/parse_css.php';
+	require ROOT_DIR.'parse/parse_css.php';
 }else{
-	include DIR.'parse/parse_xml.php';
+	require ROOT_DIR.'parse/parse_xml.php';
 }
