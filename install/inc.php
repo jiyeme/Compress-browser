@@ -87,7 +87,7 @@ function top($title){
 function foot(){
 	global $iswml;
 	echo hr;
-	echo date('Y-n-j H:i:s').'<br/><b>Powered By <a href="http://jiuwap.cn">jiuwap.cn</a></b>';
+	echo date('Y-n-j H:i:s').'<br/><b>Powered By <a href="http://jiuwap.cn">jiuwap.cn</a> Modified by <a href="http://www.jysafe.cn/">Traum</a></b>';
 	if ( $iswml ){
 		echo '</p></card></wml>';
 	}else{

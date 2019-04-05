@@ -1,13 +1,12 @@
 <?php
-\
 $isfull = post('isfull',1);
 $psw = isset($_REQUEST['psw']) ? $_REQUEST['psw'] : '';
 if ( file_Exists('../set_config/set_config.php') ){
-	if ( $version && $version<'20110431' ){
+	if ( $version && $version<'20190405' ){
 		top('安装玖玩浏览器');
 		echo '<b>重新安装玖玩浏览器</b>';
 		echo hr;
-		echo '请先将浏览器升级至20110431版再进行玖玩浏览器的重新(升级)安装！<a href="index.php?do=update">检测升级</a><br/>';
+		echo '请先将浏览器升级至20190405版再进行玖玩浏览器的重新(升级)安装！<a href="index.php?do=update">检测升级</a><br/>';
 		foot();
 		exit;
 	}
@@ -76,8 +75,8 @@ if ( file_Exists('../set_config/set_config.php') ){
 	$db_table = post('db_table','');
 	$icp = post('icp','');
 	$title_str = post('title_str','[压流]');
-	$webtitle = post('webtitle','玖玩浏览器');
-	$disktitle = post('disktitle','玖玩网盘');
+	$webtitle = post('webtitle','祭夜浏览器');
+	$disktitle = post('disktitle','祭夜网盘');
 	$mail_smtp = post('mail_smtp','smtp.qq.com');
 	$mail_user = post('mail_user','10000@qq.com');
 	$mail_pass = post('mail_pass','');

@@ -208,6 +208,7 @@ HTTP代理：<input type='checkbox' name='ipagent_open' value="1"<?php echo sele
 	<option value="4"<?php echo selectit('useragent','4',' selected="selected"');?>>OP浏览器(WEB)</option>
 	<option value="5"<?php echo selectit('useragent','5',' selected="selected"');?>>JIUWAP(WAP)</option>
 	<option value="6"<?php echo selectit('useragent','6',' selected="selected"');?>>移动模拟(WAP)</option>
+	<option value="10"<?php echo selectit('useragent','10',' selected="selected"');?>>测试专用(Chrome浏览器)</option>
 </select>
 <?php echo hr?>
 页面转换：

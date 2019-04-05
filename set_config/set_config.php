@@ -123,5 +123,5 @@ $b_set['quicklogin']['sina']['skey'] = '';
 
 
 //QQ
-$b_set['quicklogin']['qq']['appid'] = '';
-$b_set['quicklogin']['qq']['appkey'] = '';
+$b_set['quicklogin']['qq']['appid'] = '101546697';
+$b_set['quicklogin']['qq']['appkey'] = '70de6dec1a9a821376bde44c36d3957a';

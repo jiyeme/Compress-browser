@@ -112,7 +112,7 @@ if ( strpos($bottom_str,'[')!==false && strpos($bottom_str,']')!==false ){
         $bottom_str = str_replace('[size]',bitsize($html_size_new).'[缓存]',$bottom_str);
     }
     if ( $mime != 'text/vnd.wap.wml' ){
-        $bottom_str = str_replace('[go]','<form action="index.php" method="get"><input type="text" name="url" value="'.htmlspecialchars($url).'" /><br/><input type="submit" value="进入"/></form>',$bottom_str);
+        $bottom_str = str_replace('[go]','<form action="index.php" method="get"><input type="text" name="url" value="'.htmlspecialchars($url).'" />|<input type="submit" value="进入"/></form>',$bottom_str);
     }else{
         $bottom_str = str_replace('[go]','<input name="url'.$browser->rand.'" type="text" value="'.htmlspecialchars($url).'"/><br/><anchor><go href="index.php" method="get"><postfield name="url" value="$(url'.$browser->rand.')" /></go>进入</anchor>',$bottom_str);
     }
@@ -126,7 +126,7 @@ $bottom_str = init_ad().$bottom_str;
 if( $mime == 'text/vnd.wap.wml' ){
    $bottom_str = '<p>'.$bottom_str.'</p>';
 }else{
-   $bottom_str = '<div>'.$bottom_str.'</div>';
+   $bottom_str = '<div style="position: fixed;/*height: 30px;*/width: 100%;bottom: 0px;background: rgba(255,255,255,0.6);border-top: solid white 2px;text-align: center;font-size: 20px;color: #2196F3;text-shadow: #000 1px 1px 1px;">'.$bottom_str.'</div>';
 }
 
 if ($code!='utf-8'){

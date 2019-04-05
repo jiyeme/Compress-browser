@@ -118,9 +118,7 @@ $browser->cacheurl_set();
 
 //traum
 //$html = preg_replace('@<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>@ies', "check_xml('\\1','\\2')", $html);
-$html = preg_replace_callback('/<([\/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){
-    return check_xml($i[1],$i[2]);
-}, $html);
+//$html = preg_replace_callback('/<([\/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
 
 if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	//处理wml的表单转换成form

@@ -1,0 +1,1 @@
+更正install/set_config.tmp文件

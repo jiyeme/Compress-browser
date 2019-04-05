@@ -185,7 +185,7 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	}
 	echo $jiuwap_template;
 	if ( $Powered ){
-		echo 'Powered By <a href="http://jiuwap.cn/">Jiuwap.cn</a>';
+		echo 'Powered By <a href="http://jiuwap.cn/">Jiuwap.cn</a> Modified by <a href="http://www.jysafe.cn/">Traum</a>';
 	}
 	$browser->template_foot();
 }

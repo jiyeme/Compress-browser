@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `browser_users` (
   `num_size_pic` int(10) unsigned NOT NULL,
   `config_pic` enum('0','1','2','3','4','5','6','7','8') NOT NULL,
   `config_wap2wml` enum('0','1','2','3','4') NOT NULL,
-  `config_useragent` enum('0','1','2','3','4','5','6','7','8','9') NOT NULL,
+  `config_useragent` enum('0','1','2','3','4','5','6','7','8','9','10') NOT NULL,
   `config_ipagent` varchar(30) NOT NULL,
   `config_cutpage` int(3) NOT NULL,
   `config_pic_wap` enum('0','1','2','3','4','5','6','7','8') NOT NULL default '0',

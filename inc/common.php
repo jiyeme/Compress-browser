@@ -418,8 +418,8 @@ Class browser{
 
 	function site_lists($all=true){
 		$site = array();
-		$site[] = array('title' => '玖玩','url' => 'http://jiuwap.cn');
-		//$site[] = array('title' => 'MRPQQ','url' => 'http://mrpqq.com');
+		$site[] = array('title' => 'Traum','url' => 'http://www.jysafe.cn');
+		$site[] = array('title' => '预留','url' => '');
 		@include ROOT_DIR.'set_config/sites.php';
 		return $site;
 	}

@@ -63,6 +63,6 @@ if ( $browser->template == 0 ){
 	</go>修改</anchor><br/>';
 }
 echo '<br /><a href="login.php?r='.$browser->rand.'">返回登录</a>'.hr;
-echo 'Powered By <a href="http://jiuwap.cn/">Jiuwap.cn</a><br/>';
+echo 'Powered By <a href="http://jiuwap.cn/">Jiuwap.cn</a><br/> Modified by <a href="http://www.jysafe.cn/">Traum</a>';
 echo $b_set['icp'];
 $browser->template_foot();
