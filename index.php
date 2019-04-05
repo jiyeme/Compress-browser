@@ -144,4 +144,5 @@ if ( isset($_GET['p']) && $_GET['p']!='') {
 	}
 }
 
+//载入浏览器组件
 require ROOT_DIR.'parse/init.php';

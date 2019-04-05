@@ -6,7 +6,7 @@
  *	2011-1-14 @ jiuwap.cn
  *
  */
-
+loginfo('进入parse_xml.php');
 
 !defined('m') && header('location: /?r='.rand(0,999));
 
@@ -40,6 +40,10 @@ if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
     //$html = preg_replace('@<script(.*?)<\/script>@ies',"script_check_jump('\\1')", $html);
 	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function ($i){return script_check_jump($i[1]);}, $html);
 }
+
+//loginfo('写入网页源码');
+//loginfo($html);
+//loginfo('写入网页源码完毕');
 
 if ( stripos($html,'<embed')!==false  && stripos($html,'</embed>')!==false  ){
 	$html = preg_replace('@<embed(.*?)<\/embed>@i','', $html);
