@@ -27,7 +27,7 @@ if ( isset($_SERVER['PATH_INFO']) && substr($_SERVER['PATH_INFO'],0,3) == '/d/' 
 		$id = password2id($id,'4hr5h5da');
 		if ( $id !== false){
 			define('no_ob_gzip','true');
-			require ROOT_DIR.'tools/down_file.php';
+			require_once ROOT_DIR.'tools/down_file.php';
 		}else{
 			require ROOT_DIR.'tools/disk/_nofoundfile.php';
 		}
