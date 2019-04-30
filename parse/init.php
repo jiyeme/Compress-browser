@@ -13,7 +13,7 @@ require_once ROOT_DIR.'parse/function.php';
 if ( !in_array(strtolower(substr($url,0,7)),array('https:/','http://')) ) {
 	$url = 'http://'.$url;
 }
-//exit($url);
+
 if ( isset($_POST) && $_POST != array() && !isset($_GET['r']) ){
 	if ( isset($form_post2get)){
 		unset($form_post2get);
@@ -243,6 +243,7 @@ foreach ( $header['COOKIE'] as $key => $value){
 unset($header['COOKIE']);
 
 if ( isset($is_css) ){
+    //exit('css');
 	require ROOT_DIR.'parse/parse_css.php';
 }else{
 	require ROOT_DIR.'parse/parse_xml.php';

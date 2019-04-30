@@ -107,8 +107,8 @@ if ( isset($_GET['yes']) ){
 			quick_connect('api/?cmd=clean_all&psw='.$psw);
 			mysqli_query($db,'DROP TABLE `browser_books`,`browser_caches`,`browser_copys`,`browser_users`,`browser_users`,`disk_dir`,`disk_file`,`browser_cookies`;');
 		}
-		if ( !$sql = file_get_contents('jiuwap.sql') ){
-			throw new Exception('读取jiuwap.sql时发生错误');
+		if ( !$sql = file_get_contents('browser.sql') ){
+			throw new Exception('读取browser.sql时发生错误');
 		}
 		$sql = str_replace(array("\r","\n","\t"),'',$sql);
 		$sql = explode(';',$sql);
@@ -116,12 +116,32 @@ if ( isset($_GET['yes']) ){
 		for($i=0;$i<$n ;$i++){
 			!empty($sql[$i]) && mysqli_query($db,$sql[$i]);
 		}
+		
+		//将表导入数据库
+        //header("Content-type: text/html; charset=utf-8");
+        $_sql = file_get_contents('captcha.sql');
+        //写自己的.sql文件
+        $_arr = explode(";\n", $_sql);//此处不可修改，否则数据库可能无法成功导入
+        $_mysqli = new mysqli($db_server,$db_user,$db_pass,$db_table);
+        //第一个参数为域名，第二个为用户名，第三个为密码，第四个为数据库名字
+        if (mysqli_connect_errno()) {
+            exit('Database Connect Fail');
+        } else {
+            //执行sql语句
+            $_mysqli->query('set names utf8;');
+            //设置编码方式
+            //global $wpdb;
+            foreach ($_arr as $_value) {
+                $_mysqli->query($_value.';');
+            }
+            echo '<div class="notice notice-success"><p>Install Successful</p></div>';
+        }
+        $_mysqli->close();
+        $_mysqli = null;
+        
 		if ( $是否是覆盖安装 ){
 			$nDir = array(
 				'./temp/cache_forever/',
-				$b_set['dfforever'],
-				$b_set['dftemp'],
-				$b_set['rfile'],
 				$b_set['rini'],
 				$b_set['utemp'],
 				$b_set['utemp'].'pics/',

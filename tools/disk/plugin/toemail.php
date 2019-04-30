@@ -50,7 +50,7 @@ $mail -> Username = $b_set['mail']['user']; //发件人的姓名
 $mail -> Password = $b_set['mail']['pass']; //发件人在SMTP主机中的密码  
 $mail -> Subject = $dir['title']; //邮件主题  
 $mail -> AltBody = 'text/html'; //设置在邮件正文不支持HTML时的备用显示
-$mail -> Body = '欢迎使用'.$b_set['disktitle'].'-邮箱投递服务，本服务完全免费。'."\r\n".'我们的网站：http://'.$b_set['host'].'，感谢大家的支持。'."\r\n".'(本邮件由'.$b_set['disktitle'].'系统发送，请勿回复。)'.$b_set['dfforever'].$dir['file'].$dir['title'];//邮件内容做成
+$mail -> Body = '欢迎使用'.$b_set['disktitle'].'-邮箱投递服务，本服务完全免费。'."\r\n".'我们的网站：http://'.$b_set['host'].'，感谢大家的支持。'."\r\n".'(本邮件由'.$b_set['disktitle'].'系统发送，请勿回复。)'.$dir['file'].$dir['title'];//邮件内容做成
 $mail -> IsHTML(true);  //是否是HTML邮件
 $mail -> AddAddress($mail_url,'亲爱的朋友'); //收件人的地址和姓名  
 $mail -> AddReplyTo($b_set['mail']['user'],$b_set['disktitle']); //收件人回复时回复给的地址和姓名

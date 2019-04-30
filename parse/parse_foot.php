@@ -126,7 +126,7 @@ $bottom_str = init_ad().$bottom_str;
 if( $mime == 'text/vnd.wap.wml' ){
    $bottom_str = '<p>'.$bottom_str.'</p>';
 }else{
-   $bottom_str = '<div style="/*position: fixed;height: 30px;width: 100%;bottom: 0px;*/background: rgba(255,255,255,0.6);border-top: solid white 2px;text-align: center;font-size: 20px;color: #2196F3;/*text-shadow: #000 1px 1px 1px;*/position: sticky;">'.$bottom_str.'</div>';
+   $bottom_str = '<div style="/*position: fixed;height: 30px;width: 100%;bottom: 0px;*/background: rgba(255,255,255,0.6);border-top: solid white 2px;text-align: center;font-size: 20px;color: #2196F3;/*text-shadow: #000 1px 1px 1px;position: sticky;*/">'.$bottom_str.'</div>';
 }
 
 if ($code!='utf-8'){

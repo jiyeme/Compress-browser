@@ -111,7 +111,7 @@ if ( isset($_GET['p']) && $_GET['p']!='') {
 }elseif ( isset($_GET['v']) && $_GET['v']!='') {
 	//css
 	$url = $browser->cache_get('url',$_GET['v']);
-	
+	header('Content-Type:text/css; charset=UTF-8');
 	if ( $url == false ){
 		exit;
 	}else{

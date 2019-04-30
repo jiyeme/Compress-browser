@@ -783,7 +783,7 @@ function fix_css($str,$fix=true){
     }else{
         //traum
         //$str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
-        $str = preg_replace_callback("@background:url\((.+?)\)@i", function($i){return (stripos($i[1],'data:image/png') !== 0)?'background:url(?p='._browser_cache_add_pic($i[1]).')':'background:url('.$i[1].')';}, $str);
+        $str = preg_replace_callback("@background:[a-z- ]+url\((.+?)\)@i", function($i){return (stripos($i[1],'data:image/png') !== 0)?'background:url(?p='._browser_cache_add_pic($i[1]).')':'background:url('.$i[1].')';}, $str);
     }
     return $str;
 }
