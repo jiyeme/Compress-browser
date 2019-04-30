@@ -7,7 +7,6 @@
  *  2019-4-12 @ jysafe.cn
  *
  */
-//loginfo('进入parse_xml.php');
 
 !defined('m') && header('location: /?r='.rand(0,999));
 
@@ -43,9 +42,6 @@ if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
 	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function ($i){return script_check_jump($i[1]);}, $html);
 }
 
-//loginfo('写入网页源码');
-//loginfo($html);
-//loginfo('写入网页源码完毕');
 
 //stripos() 函数查找字符串在另一字符串中第一次出现的位置（不区分大小写）
 if ( stripos($html,'<embed')!==false  && stripos($html,'</embed>')!==false  ){
@@ -123,9 +119,7 @@ if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 //$html = preg_replace('@<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>@ies', "check_xml('\\1','\\2')", $html);
 $html = preg_replace_callback('/<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
 
-//exit($html);
 
-//loginfo(htmlspecialchars_decode($html));
 $browser->cacheurl_set();
 
 //traum

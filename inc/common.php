@@ -319,7 +319,7 @@ Class browser{
 	}
 
 	function fixlower($str){
-		$zimu = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
+		$zimu = array(  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
 		$shuzi = array('_0','_1','_2','_3','_4','_5','_6','_7','_8','_9','_a','_b','_c','_d','_e','_f','_g','_h','_i','_j','_k','_l','_m','_n','_o','_p');
 		return str_replace($zimu,$shuzi,$str);
 	}
@@ -409,6 +409,7 @@ Class browser{
 			}
 		}elseif ( $type == 'pic' ){
 			$var = $this->db->fetch_first('SELECT content FROM `browser_caches` WHERE keyid="'.$this->uid.'p'.$this->fixlower($key).'" AND type=1 AND uid='.$this->uid);
+			//loginfo('SELECT content FROM `browser_caches` WHERE keyid="'.$this->uid.'p'.$this->fixlower($key).'" AND type=1 AND uid='.$this->uid);
 			if ( $var['content'] ){
 				if ( !$var['content'] = @unserialize($var['content']) ){
 					return array();

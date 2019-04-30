@@ -98,7 +98,9 @@ function script_check_jump($str2){
 function fullurl($new_url){
     $new_url = str_ireplace('&at;at;','@',$new_url);
     $new_url = htmlspecialchars_decode($new_url);
-
+    
+    (stripos($new_url,'//') === 0)?$new_url = 'https:'.$new_url:$new_url;
+    
     static $old_url = false;
     if ( $old_url === false ){
         global $url_A;
@@ -141,7 +143,7 @@ function check_xml($xml,$str){
         return '';
     }
     if ( $browser->wap2wml==0 && $mime != 'text/vnd.wap.wml' && $mime != 'application/vnd.wap.xhtml+xml'){
-        //exit('000001');
+    
         if ( strpos($str,'class="')){
             $str = trim(preg_replace('@class="(.*?)"@i','', $str));
         }
@@ -204,8 +206,8 @@ function check_xml($xml,$str){
         }
     }
 
-    if ( in_array($xml,array('link','option','a','form','img','meta1','go','card','input1','base','button1','iframe','frame')) ){
-        //exit($xml);
+    if ( in_array($xml,array('link','option','a','form','img','meta','go','card','input1','base','button','iframe','frame')) ){
+    
         $xml = 'parse_xml_'.$xml;
         return $xml($str);
     }else{
@@ -226,7 +228,7 @@ function parse_xml_link($str){
     $href = get_xml($str,'href');
     $type = get_xml($str,'type');
     if ( $type == 'text/css' && $href!='' && $browser->wap2wml!=0 ){
-        //loginfo($href.'----------'.fullurl($href));
+        
         $href = $browser->cache_add('url',fullurl($href));
         if ( $rel!='' ){
             $rel = ' rel="'.$rel.'"';
@@ -450,13 +452,22 @@ function parse_xml_img($str){
     if ( $alt!='' ) {
         $alt = ' alt="'.$alt.'"';
     }
-    $src = fullurl($src);
+    
+    if(stripos($src,'data:image/png') !== 0){
+        $src = fullurl($src);
+    }
+    
     if ( $browser->pic == 4 ){
         return '<img src="'.htmlspecialchars($src).'"'.$alt.'/>';
     }
     global $url,$mime;
-    $src = $browser->cache_add('pic',$src,$url,$mime);
-    return '<img src="?p='.$src.'"'.$alt.'/>';
+    
+    if(stripos($src,'data:image/png') !== 0){
+        $src = $browser->cache_add('pic',$src,$url,$mime);
+        return '<img src="?p='.$src.'"'.$alt.'/>';
+    }else{
+        return '<img src="'.$src.'"'.$alt.'/>';
+    }
 }
 
 
@@ -772,12 +783,14 @@ function fix_css($str,$fix=true){
     }else{
         //traum
         //$str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
-        $str = preg_replace_callback("@background:url\((.+?)\)@i", function($i){return 'background:url(?p='._browser_cache_add_pic($i[1]).')';}, $str);
+        $str = preg_replace_callback("@background:url\((.+?)\)@i", function($i){return (stripos($i[1],'data:image/png') !== 0)?'background:url(?p='._browser_cache_add_pic($i[1]).')':'background:url('.$i[1].')';}, $str);
     }
     return $str;
 }
 
 function _browser_cache_add_pic($scr){
+    $scr=str_replace("'",'',$scr);
+    $scr=str_replace('"','',$scr);
     global $browser,$url,$mime;
     return $browser->cache_add('pic',fullurl($scr),$url,$mime);
 }

@@ -204,7 +204,7 @@ $http->send();
 
 //获取返回头信息
 $header = $http->get_headers();
-//echo json_encode($header);
+
 $url_A = $http->get_urls();//$url_A = $http->parse_url($url);
 
 $url = $http->get_url();
@@ -242,12 +242,8 @@ foreach ( $header['COOKIE'] as $key => $value){
 
 unset($header['COOKIE']);
 
-
-	//$is_css = true;
 if ( isset($is_css) ){
-    loginfo('进入CSS处理');
 	require ROOT_DIR.'parse/parse_css.php';
 }else{
-    //loginfo('进入xml处理'.$is_css);
 	require ROOT_DIR.'parse/parse_xml.php';
 }
