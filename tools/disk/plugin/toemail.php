@@ -5,10 +5,13 @@ if ( isset($_GET['yes']) ){
 	if ( $dir['size'] > $b_set['tmail']) {
 		$error = '错误：暂时无法发送大于'.bitsize($b_set['tmail']).'的文件！';
 	}else{
-		$filename = cloud_storage::localname('tmp_' . rand(0,999) . time());
-		$filename = cloud_storage::download_tmp('disk_' . $dir['file'],$filename);
-
-		@cloud_memcache::set($browser->uid . '_mail',$mail_url);
+	    require ROOT_DIR .'set_config/set_config.php';
+        if($b_set['server_php_mamcache_server']){
+		    $filename = cloud_storage::localname('tmp_' . rand(0,999) . time());
+		    $filename = cloud_storage::download_tmp('disk_' . $dir['file'],$filename);
+		
+		    cloud_memcache::set($browser->uid . '_mail',$mail_url);}
+		    
 		//set_cache_forever('email'.$disk['id'],$mail_url);
 		@set_time_limit(7200);
 		//require_once ROOT_DIR.'inc/class/smtp.class.php';

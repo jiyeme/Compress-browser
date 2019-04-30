@@ -4,9 +4,10 @@
  *	浏览器->解析XML
  *
  *	2011-1-14 @ jiuwap.cn
+ *  2019-4-12 @ jysafe.cn
  *
  */
-loginfo('进入parse_xml.php');
+//loginfo('进入parse_xml.php');
 
 !defined('m') && header('location: /?r='.rand(0,999));
 
@@ -32,6 +33,7 @@ if ( stripos($html,'<wml>') ){
 
 require ROOT_DIR.'parse/ad/init_ad.php';
 
+//处理js
 if ( stripos($html,'<noscript')!==false  && stripos($html,'</noscript>')!==false  ){
 	$html = preg_replace('@<noscript(.*?)<\/noscript>@i','', $html);
 }
@@ -45,14 +47,18 @@ if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
 //loginfo($html);
 //loginfo('写入网页源码完毕');
 
+//stripos() 函数查找字符串在另一字符串中第一次出现的位置（不区分大小写）
 if ( stripos($html,'<embed')!==false  && stripos($html,'</embed>')!==false  ){
 	$html = preg_replace('@<embed(.*?)<\/embed>@i','', $html);
 }
 
+//处理按钮
 if ( stripos($html,'<button')!==false  && stripos($html,'</button>')!==false  ){
-	$html = preg_replace('@<button(.*?)>(.*?)<\/button>@i','<button$1 name_value="$2">', $html);
+    //exit('12166');
+	//$html = preg_replace('@<button(.*?)>(.*?)<\/button>@i','<button$1 name_value="$2">', $html);
 }
 
+//处理css
 if ( stripos($html,'<style')!==false  && stripos($html,'style>')!==false  ){
     //traum
     //$html = preg_replace('@<style(.*?)style>@ies',"'<style'.fix_css('\\1').'style>'", $html);
@@ -117,6 +123,8 @@ if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 //$html = preg_replace('@<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>@ies', "check_xml('\\1','\\2')", $html);
 $html = preg_replace_callback('/<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
 
+//exit($html);
+
 //loginfo(htmlspecialchars_decode($html));
 $browser->cacheurl_set();
 
@@ -125,6 +133,7 @@ $browser->cacheurl_set();
 //$html = preg_replace_callback('/<([\/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
 
 if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
+    //exit('处理wml的表单转换成form');
 	//处理wml的表单转换成form
 	$html = preg_replace('@<select(.*?)>(.*?)</select>@ies', "fix_wml_form_select('\\1','\\2')", $html);
 	$html = preg_replace('@<(postfield|anchor|go|/postfield|/anchor|/go)(.*?)>@ies', "fix_wml_form('\\1','\\2')", $html);
@@ -224,7 +233,7 @@ $html = str_ireplace('&at;at;','@',$html);
 
 if ( $code!='utf-8'){
 	if ( $html_title!='' ){
-		@$html_title = iconv($code,'utf-8//TRANSLIT', $html_title);
+		$html_title = iconv($code,'utf-8//TRANSLIT', $html_title);
 	}
 }elseif ( strpos($html,'&#')!==false && strpos($html,';')!==false && $code == 'utf-8'){
     $html = unicode2utf8($html);

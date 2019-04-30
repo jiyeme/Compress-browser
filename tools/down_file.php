@@ -30,9 +30,9 @@ if ( $content['size'] > $b_set['tdown'] ){
 
 $filecontent = $browser->tempfile_read(sha1($arr['url']));
 if ( $filecontent !== false  ){
-    @ob_end_clean();
-    @ob_start();
-    @set_time_limit(7200);
+    ob_end_clean();
+    ob_start();
+    set_time_limit(7200);
 
 	header('Date: '.gmdate_('D, d M Y H:i:s') . ' GMT');
 	header('Last-Modified: '.gmdate_('D, d M Y H:i:s') . ' GMT');
@@ -52,7 +52,7 @@ if ( $filecontent !== false  ){
 	Header('Content-Type: '.$content['type']);
 
 
-	@ob_flush();
+	ob_flush();
 	flush();
 	/*if (!$fp = @fopen($b_set['rfile'].$filename,'rb')){
 		exit;

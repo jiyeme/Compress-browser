@@ -9,7 +9,7 @@
  */
 
 $version = '0';
-@include 'set_config/version.php';
+include 'set_config/version.php';
 if ( $version == 0 ){
 	header('LOCATION: /install/index.php');
     exit;
@@ -111,6 +111,7 @@ if ( isset($_GET['p']) && $_GET['p']!='') {
 }elseif ( isset($_GET['v']) && $_GET['v']!='') {
 	//css
 	$url = $browser->cache_get('url',$_GET['v']);
+	
 	if ( $url == false ){
 		exit;
 	}else{
@@ -119,6 +120,7 @@ if ( isset($_GET['p']) && $_GET['p']!='') {
 	}
 }elseif ( isset($_GET['url']) ) {
 	$url = ubb_copy(fix_r_n_t($_GET['url']));
+	//$url = 'https://wodemo.com';
 }else{
     if ( isset($_GET['dn']) && $_GET['dn']!=''){
         //网盘上传

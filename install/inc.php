@@ -144,7 +144,7 @@ function post($title,$value=''){
 function quick_connect($url){
 	$fp = @fsockopen('localhost',80);
 	if ( !$fp ){
-		break;
+		//break;
 	}
 	$out = "GET /{$url} HTTP/1.1\r\n";
 	$out .= "Host: {$_SERVER['SERVER_NAME']}\r\n";

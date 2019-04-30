@@ -40,7 +40,7 @@ if ( isset($_GET['type']) && isset($_GET['key']) && isset($_POST['name']) && iss
 			$browser->template_foot();
 		}else{
 			//绑定旧账号
-			$browser->db->replace('browser_users_quicklogin', array('key'=>$token,'uid'=>$var['id'],'type'=>$_GET['type'],'time'=>time_()) ,'`key`="'.$token.' AND `type`="'.$_GET['type'].'"');
+			$browser->db->replace('browser_users_quicklogin', array('key'=>$token,'uid'=>$var['id'],'type'=>$_GET['type'],'time'=>time_()) ,'`key`="'.$token.'" AND `type`="'.$_GET['type'].'"');
 
 			set_Cookie('FREE', $browser->template.';'.$_POST['name'].';'.$_POST['pass'],time_()+2592000);
 			load_template('login_success',false,'index.php?r='.$browser->rand,false,'utf-8',5);
@@ -122,8 +122,10 @@ if ( isset($_GET['type']) && isset($_GET['key']) && isset($_POST['name']) && iss
 	}
 
 }else if ( isset($_GET['yes']) ){
+    //开始登录
     if ( $browser->user_login($_GET['name'],$_GET['pass']) ){
 		load_template('login_success',false,'index.php?r='.$browser->rand,false,'utf-8',5);
+		
     }else{
 		load_template('login_fail',false);
     }

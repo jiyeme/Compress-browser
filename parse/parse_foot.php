@@ -22,7 +22,7 @@ if ( isset($disk_upload_var) ){
     if ( $browser->wap2wml==3 ){
 		$enterdiskfalse = '检测到上传表单,当前处于WAP1模式,无法本地上传';
 		if ($code!='utf-8'){
-			@$enterdiskfalse = iconv('utf-8',$code.'//TRANSLIT', $enterdiskfalse);
+			$enterdiskfalse = iconv('utf-8',$code.'//TRANSLIT', $enterdiskfalse);
 		}
         $html = str_replace('<!--'.$disk_upload_var.'-->','<a href="?dl='.$the_history_key.'">['.$enterdiskupload.']</a><br/>('.$enterdiskfalse.')<br/>',$html);
     }else{
@@ -32,8 +32,8 @@ if ( isset($disk_upload_var) ){
 	$enterdiskupload = '进入网盘上传模式';
 	$exitdiskupload = '离开网盘上传模式';
 	if ($code!='utf-8'){
-		@$exitdiskupload = iconv('utf-8',$code.'//TRANSLIT', $exitdiskupload);
-		@$enterdiskupload = iconv('utf-8',$code.'//TRANSLIT', $enterdiskupload);
+		$exitdiskupload = iconv('utf-8',$code.'//TRANSLIT', $exitdiskupload);
+		$enterdiskupload = iconv('utf-8',$code.'//TRANSLIT', $enterdiskupload);
 	}
     $disk_upload_var = str_pos($html,'<form','>');
     preg_match_all('@<form(.*?)>@i',$html,$matches);
@@ -126,14 +126,14 @@ $bottom_str = init_ad().$bottom_str;
 if( $mime == 'text/vnd.wap.wml' ){
    $bottom_str = '<p>'.$bottom_str.'</p>';
 }else{
-   $bottom_str = '<div style="position: fixed;/*height: 30px;*/width: 100%;bottom: 0px;background: rgba(255,255,255,0.6);border-top: solid white 2px;text-align: center;font-size: 20px;color: #2196F3;text-shadow: #000 1px 1px 1px;">'.$bottom_str.'</div>';
+   $bottom_str = '<div style="/*position: fixed;height: 30px;width: 100%;bottom: 0px;*/background: rgba(255,255,255,0.6);border-top: solid white 2px;text-align: center;font-size: 20px;color: #2196F3;/*text-shadow: #000 1px 1px 1px;*/">'.$bottom_str.'</div>';
 }
 
 if ($code!='utf-8'){
 	//$title_str = mb_convert_encoding($title_str,$code, 'utf-8');
 	//$bottom_str = mb_convert_encoding($bottom_str,$code, 'utf-8');
-	@$title_str = iconv('utf-8',$code.'//TRANSLIT', $title_str);
-	@$bottom_str = iconv('utf-8',$code.'//TRANSLIT', $bottom_str);
+	$title_str = iconv('utf-8',$code.'//TRANSLIT', $title_str);
+	$bottom_str = iconv('utf-8',$code.'//TRANSLIT', $bottom_str);
 }
 
 if ( stripos($html,'</body>') ){
@@ -160,4 +160,4 @@ if ( $code != 'utf-8' || $mime == 'text/vnd.wap.wml' ){
 	header('Content-Type: '.$mime.'; charset='.$code);
 }
 echo $html;
-@ob_end_flush();
+ob_end_flush();

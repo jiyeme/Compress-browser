@@ -6,18 +6,21 @@
  *	2011/7/10 @ jiuwap.cn
  *
  */
-
+//exit(ROOT_DIR);
 if ( !defined('JIUWAP_TIME_CHA') ){
+    
 	date_default_timezone_set('PRC');
 	function NTP_time(){
+        require ROOT_DIR .'set_config/set_config.php';
 		$local = $net = 0;
-
-		$cha1 = @cloud_memcache::get('ntp_time');
+		
+		$cha1 = false;
+		    $cha1 = cloud_memcache::get('ntp_time');
 
 		if ( !$cha1 ){
-			if ( $fp = @fsockopen('203.129.68.14',13,$errno,$errstr,3) ){
-				@stream_set_timeout($fp, 3);
-				$net = @fread($fp,2096);
+			if ( $fp = @pfsockopen('time.nist.gov',13,$errno,$errstr,3) ){
+				stream_set_timeout($fp, 3);
+				$net = fread($fp,2096);
 				if ( empty($net) ){
 					$cha1 = 0;
 				}else{
@@ -31,7 +34,7 @@ if ( !defined('JIUWAP_TIME_CHA') ){
 			}else{
 				$cha1 = 1;
 			}
-			@cloud_memcache::set('ntp_time',$cha1);
+			    cloud_memcache::set('ntp_time',$cha1);
 		}
 		$net = $local + $cha1;
 		define('JIUWAP_TIME_CHA',$cha1);

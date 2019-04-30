@@ -13,7 +13,7 @@ require_once ROOT_DIR.'parse/function.php';
 if ( !in_array(strtolower(substr($url,0,7)),array('https:/','http://')) ) {
 	$url = 'http://'.$url;
 }
-
+//exit($url);
 if ( isset($_POST) && $_POST != array() && !isset($_GET['r']) ){
 	if ( isset($form_post2get)){
 		unset($form_post2get);
@@ -40,7 +40,7 @@ $http->set_dns($browser->dns_getAll());
 $http->set_timeout(30);
 $http->set_location(5);
 
-$http->open($url);
+$http->open($url);//打开链接
 
 $url_A = $http->get_urls();
 
@@ -186,7 +186,7 @@ if ( $b_set['switch']['upload'] && $_FILES ){
                 }
             }
         }else{
-            if ( $val['content'] = @file_get_contents($val['tmp_name']) ){
+            if ( $val['content'] = file_get_contents($val['tmp_name']) ){
                 $http->put_file_bystring($name,$val['name'],$val['content'],$val['type']);
             }
         }
@@ -212,6 +212,7 @@ $fix_url_base = false;
 
 if ( isset($header['STATUS']) && $header['STATUS'] == '301' ){
 	$str = '错误：您输入的域名有误或站点访问失败。(301)<br/>地址：'.$url.'	<br /><a href="'.$url.'">直接浏览</a>';
+	echo json_encode($header);
     error_show('访问失败',$str);
 }
 
@@ -247,6 +248,6 @@ if ( isset($is_css) ){
     loginfo('进入CSS处理');
 	require ROOT_DIR.'parse/parse_css.php';
 }else{
-    loginfo('进入xml处理'.$is_css);
+    //loginfo('进入xml处理'.$is_css);
 	require ROOT_DIR.'parse/parse_xml.php';
 }

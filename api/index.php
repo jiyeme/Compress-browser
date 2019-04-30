@@ -18,10 +18,10 @@ http://test/api/?cmd=clean
  */
 
 define('no_ob_gzip','true');
-@set_time_limit(7200);
+set_time_limit(7200);
 
 $version = '0';
-@include '../set_config/version.php';
+include '../set_config/version.php';
 if ( $version == 0 ){
 	header('LOCATION: /install/index.php');
     exit;

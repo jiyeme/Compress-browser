@@ -10,8 +10,8 @@ if ( file_Exists('../set_config/set_config.php') ){
 		foot();
 		exit;
 	}
-	@include '../set_config/set_config.php';
-	@include '../set_config/set_mail.php';
+	include '../set_config/set_config.php';
+	//include '../set_config/set_mail.php';
 	$db_server = post('db_server',$b_set['db']['server']);
 	$db_user = post('db_user',$b_set['db']['user']);
 	$db_pass = post('db_pass',$b_set['db']['pass']);
@@ -55,7 +55,7 @@ if ( file_Exists('../set_config/set_config.php') ){
 			}else{
 				echo '<anchor>';
 				echo '<go href="index.php?do=install_full" method="post">';
-				echo '<postfield name="psw" value="$psw" />';
+				echo '<postfield name="psw" value="'.$psw.'" />';
 				echo '</go>确认</anchor>';
 			}
 			echo '<a href="index.php">返回</a><br/>';
@@ -95,26 +95,26 @@ if ( file_Exists('../set_config/set_config.php') ){
 if ( isset($_GET['yes']) ){
 	$error = false;
 	try{
-		if ( !$db = @mysql_connect($db_server,$db_user,$db_pass)){
-			throw new Exception('连接数据库失败,'.mysql_error());
+		if ( !$db = mysqli_connect($db_server,$db_user,$db_pass)){
+			throw new Exception('连接数据库失败,'.mysqli_error());
 		}
-		@mysql_query('CREATE DATABASE `'.$db_table.'` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;');
-		if( !$conn2 = @mysql_select_db($db_table,$db)){
-			throw new Exception('打开数据库失败,'.mysql_error());
+		mysqli_query($db,'CREATE DATABASE `'.$db_table.'` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;');
+		if( !$conn2 = mysqli_select_db($db,$db_table)){
+			throw new Exception('打开数据库失败,'.mysqli_error());
 		}
 		if ( $isfull ){
 			$是否是覆盖安装 = false;
 			quick_connect('api/?cmd=clean_all&psw='.$psw);
-			@mysql_query('DROP TABLE `browser_books`,`browser_caches`,`browser_copys`,`browser_users`,`browser_users`,`disk_dir`,`disk_file`,`browser_cookies`;');
+			mysqli_query($db,'DROP TABLE `browser_books`,`browser_caches`,`browser_copys`,`browser_users`,`browser_users`,`disk_dir`,`disk_file`,`browser_cookies`;');
 		}
-		if ( !$sql = @file_get_contents('jiuwap.sql') ){
+		if ( !$sql = file_get_contents('jiuwap.sql') ){
 			throw new Exception('读取jiuwap.sql时发生错误');
 		}
 		$sql = str_replace(array("\r","\n","\t"),'',$sql);
 		$sql = explode(';',$sql);
 		$n = count($sql);
 		for($i=0;$i<$n ;$i++){
-			!empty($sql[$i]) && @mysql_query($sql[$i]);
+			!empty($sql[$i]) && mysqli_query($db,$sql[$i]);
 		}
 		if ( $是否是覆盖安装 ){
 			$nDir = array(
@@ -136,13 +136,13 @@ if ( isset($_GET['yes']) ){
 		}else{
 			$tmp = strtolower(str_rand(7));
 			$nDir = array(
-				'./temp/cache_forever/',
-				'./temp/disk_forever_'.$tmp.'/',
-				'./temp/disk_temp_'.$tmp.'/',
-				'./temp/down_file_'.$tmp.'/',
-				'./temp/down_ini_'.$tmp.'/',
-				'./temp/cache_'.$tmp.'/',
-				'./temp/cache_'.$tmp.'/pics/',
+				'../temp/cache_forever/',
+				'../temp/disk_forever_'.$tmp.'/',
+				'../temp/disk_temp_'.$tmp.'/',
+				'../temp/down_file_'.$tmp.'/',
+				'../temp/down_ini_'.$tmp.'/',
+				'../temp/cache_'.$tmp.'/',
+				'../temp/cache_'.$tmp.'/pics/',
 			);
 			$nPassKey = array(
 				str_rand(7),
@@ -155,7 +155,7 @@ if ( isset($_GET['yes']) ){
 		foreach( $nDir2 as $k=>$__Dir){
 			$nDir2[$k] = '\''.($__Dir).'\'';
 		}
-		if ( !$set_config = @file_get_contents('set_config.tmp') ){
+		if ( !$set_config = file_get_contents('set_config.tmp') ){
 			throw new Exception('读取set_config.tmp时发生错误');
 		}
 		$set_config = str_replace('[server]',$db_server,$set_config);
@@ -196,10 +196,10 @@ if ( isset($_GET['yes']) ){
 		$set_config = str_replace('[rootpassword]',$rootpassword,$set_config);
 
 		$set_config = str_replace('[tips]','安装于'.date('Y-n-j H:i:s'),$set_config);
-		if ( !@file_put_contents('../set_config/set_config.php',$set_config) ){
+		if ( !file_put_contents('../set_config/set_config.php',$set_config) ){
 			throw new Exception('保存set_config.php时发生错误');
 		}
-		unlink('../set_config/set_mail.php');
+		//unlink('../set_config/set_mail.php');
 
 		$ver="<?php
 		//请不要修改或删除本文件!!
@@ -207,11 +207,11 @@ if ( isset($_GET['yes']) ){
 		//以免造成浏览器无法升级!!
 		//删除本文件后即可重新安装！！
 		\$version = '{$install_version}';";
-		if ( !@file_put_contents('../set_config/version.php',$ver) ){
+		if ( !file_put_contents('../set_config/version.php',$ver) ){
 			throw new Exception('保存version.php时发生错误');
 		}
 		foreach($nDir as $dir){
-			mkdirs($dir);
+			//mkdirs($dir);
 		}
 		top('安装完成 - 安装玖玩浏览器');
 		echo '<b>安装玖玩浏览器<br/>安装完成</b>';
@@ -287,26 +287,26 @@ if ( !$iswml ){
 }else{
 	echo '<anchor>';
 	echo '<go href="index.php?do=install_full&amp;yes=yes&amp;psw='.$psw.'" method="post">';
-	echo '<postfield name="tupload" value="$tupload" />';
-	echo '<postfield name="tdown" value="$tdown" />';
-	echo '<postfield name="tmail" value="$tmail" />';
-	echo '<postfield name="dlocal" value="$dlocal" />';
-	echo '<postfield name="dhttp" value="$dhttp" />';
-	echo '<postfield name="thttp" value="$thttp" />';
-	echo '<postfield name="dinit" value="$dinit" />';
-	echo '<postfield name="db_server" value="$db_server" />';
-	echo '<postfield name="db_user" value="$db_user" />';
-	echo '<postfield name="db_pass" value="$db_pass" />';
-	echo '<postfield name="db_table" value="$db_table" />';
-	echo '<postfield name="webtitle" value="$webtitle" />';
-	echo '<postfield name="disktitle" value="$disktitle" />';
-	echo '<postfield name="mail_smtp" value="$mail_smtp" />';
-	echo '<postfield name="mail_user" value="$mail_user" />';
-	echo '<postfield name="mail_pass" value="$mail_pass" />';
-	echo '<postfield name="mail_from" value="$mail_from" />';
-	echo '<postfield name="icp" value="$icp" />';
-	echo '<postfield name="rootpassword" value="$rootpassword" />';
-	echo '<postfield name="isfull" value="$isfull" />';
+	echo '<postfield name="tupload" value="'.$tupload.'" />';
+	echo '<postfield name="tdown" value="'.$tdown.'" />';
+	echo '<postfield name="tmail" value="'.$tmail.'" />';
+	echo '<postfield name="dlocal" value="'.$dlocal.'" />';
+	echo '<postfield name="dhttp" value="'.$dhttp.'" />';
+	echo '<postfield name="thttp" value="'.$thttp.'" />';
+	echo '<postfield name="dinit" value="'.$dinit.'" />';
+	echo '<postfield name="db_server" value="'.$db_server.'" />';
+	echo '<postfield name="db_user" value="'.$db_user.'" />';
+	echo '<postfield name="db_pass" value="'.$db_pass.'" />';
+	echo '<postfield name="db_table" value="'.$db_table.'" />';
+	echo '<postfield name="webtitle" value="'.$webtitle.'" />';
+	echo '<postfield name="disktitle" value="'.$disktitle.'" />';
+	echo '<postfield name="mail_smtp" value="'.$mail_smtp.'" />';
+	echo '<postfield name="mail_user" value="'.$mail_user.'" />';
+	echo '<postfield name="mail_pass" value="'.$mail_pass.'" />';
+	echo '<postfield name="mail_from" value="'.$mail_from.'" />';
+	echo '<postfield name="icp" value="'.$icp.'" />';
+	echo '<postfield name="rootpassword" value="'.$rootpassword.'" />';
+	echo '<postfield name="isfull" value="'.$isfull.'" />';
 	echo '</go>确认,下一步</anchor>';
 }
 foot();

@@ -1,1 +1,2 @@
 更正install/set_config.tmp文件
+随便一个账号都能登陆

@@ -107,7 +107,7 @@ function fullurl($new_url){
 
     global $fix_url_base;
     if ( isset($fix_url_base) && $fix_url_base ){
-        $old_url = @parse_url($fix_url_base);
+        $old_url = parse_url($fix_url_base);
         $fix_url_base = false;
     }
     if ( isset($old_url['port']) && $old_url['port']!=80 ){
@@ -141,6 +141,7 @@ function check_xml($xml,$str){
         return '';
     }
     if ( $browser->wap2wml==0 && $mime != 'text/vnd.wap.wml' && $mime != 'application/vnd.wap.xhtml+xml'){
+        //exit('000001');
         if ( strpos($str,'class="')){
             $str = trim(preg_replace('@class="(.*?)"@i','', $str));
         }
@@ -203,7 +204,8 @@ function check_xml($xml,$str){
         }
     }
 
-    if ( in_array($xml,array('link','option','a','form','img','meta','go','card','input','base','button','iframe','frame')) ){
+    if ( in_array($xml,array('link','option','a','form','img','meta1','go','card','input1','base','button1','iframe','frame')) ){
+        //exit($xml);
         $xml = 'parse_xml_'.$xml;
         return $xml($str);
     }else{
@@ -224,6 +226,7 @@ function parse_xml_link($str){
     $href = get_xml($str,'href');
     $type = get_xml($str,'type');
     if ( $type == 'text/css' && $href!='' && $browser->wap2wml!=0 ){
+        //loginfo($href.'----------'.fullurl($href));
         $href = $browser->cache_add('url',fullurl($href));
         if ( $rel!='' ){
             $rel = ' rel="'.$rel.'"';
@@ -293,6 +296,7 @@ function parse_xml_option($str){
 }
 
 function parse_xml_button($str){
+    
     $type = get_xml($str,'type');
     $name = get_xml($str,'name');
     $value = get_xml($str,'value');
@@ -398,6 +402,7 @@ function parse_xml_meta($str){
         $name = ' name="'.$name.'"';
     }
     return '<meta'.$http_equiv.$content.$charset.$name.'/>';
+    //处理meta 完毕
 }
 
 //处理img标签
@@ -765,7 +770,9 @@ function fix_css($str,$fix=true){
         //$str = preg_replace("@background:url\((.+?)\)@ies", "'background:url('.fullurl('\\1').')'", $str);
         $str = preg_replace_callback("/background:url\((.+?)\)/i",function ($i){return 'background:url('.fullurl($i[1]).')';}, $str);
     }else{
-        $str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
+        //traum
+        //$str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
+        $str = preg_replace_callback("@background:url\((.+?)\)@i", function($i){return 'background:url(?p='._browser_cache_add_pic($i[1]).')';}, $str);
     }
     return $str;
 }

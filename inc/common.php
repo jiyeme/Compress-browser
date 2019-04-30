@@ -7,7 +7,7 @@
  *
  */
 
-error_reporting( E_ALL | E_STRICT );
+//error_reporting( E_ALL | E_STRICT );
 
 //@ini_set('zlib.output_compression', 0);
 //@ini_set('implicit_flush', 1);
@@ -75,6 +75,9 @@ require_once ROOT_DIR .'inc/class/class.db.php';
 
 require_once ROOT_DIR .'inc/template.php';
 
+include_once ROOT_DIR .'inc/class/captcha/Box.php';
+include_once ROOT_DIR .'inc/class/captcha/Color.php';
+include_once ROOT_DIR .'inc/class/captcha.class.php';
 
 Class browser{
 	public $login_key = array();
@@ -178,21 +181,23 @@ Class browser{
 	}
 
 	function cacheurl_del($type = 'url'){
+	    require ROOT_DIR .'set_config/set_config.php';
 		if ( !$this->uid ){
 			return ;
 		}
-
-		@cloud_memcache::set($this->uid.'_url_key',0);
-		@cloud_memcache::set($this->uid.'_pic_key',0);
+		if($b_set['server_php_mamcache_server']){
+    		cloud_memcache::set($this->uid.'_url_key',0);
+    		cloud_memcache::set($this->uid.'_pic_key',0);
+    		}
 
 		return ;
 
 		if ( $type == 'url' ){
-			//$this->db->delete('browser_caches','type=0 AND uid='.$this->uid);
+			$this->db->delete('browser_caches','type=0 AND uid='.$this->uid);
 		}else{
 			/* !!! todo 删除缓存文件 !!! */
-			//deldir($b_set['utemp'].'pics/'.$this->uid,false);
-			//$this->db->delete('browser_caches','type=1 AND uid='.$this->uid);
+			deldir($b_set['utemp'].'pics/'.$this->uid,false);
+			$this->db->delete('browser_caches','type=1 AND uid='.$this->uid);
 		}
 	}
 
@@ -298,12 +303,16 @@ Class browser{
 	}
 
 	function cacheurl_set(){
+	    require ROOT_DIR .'set_config/set_config.php';
 		/*if ( $this->uid == 0 ){
 			write_log(__FILE__,__line__,'UID丢失:`_set',false);
 		}*/
-		@cloud_memcache::set($this->uid.'_url_key',$this->url_key);
-		@cloud_memcache::set($this->uid.'_pic_key',$this->pic_key);
-		/*if ( $this->PHPLock ){
+		if($b_set['server_php_mamcache_server']){
+    		cloud_memcache::set($this->uid.'_url_key',$this->url_key);
+    		cloud_memcache::set($this->uid.'_pic_key',$this->pic_key);
+		    
+		}
+    		/*if ( $this->PHPLock ){
 			$this->PHPLock->unlock();
 			$this->PHPLock->endLock();
 		}*/
@@ -316,6 +325,7 @@ Class browser{
 	}
 
 	function cache_add($type,$url,$referer=false,$mime=false){
+	    require ROOT_DIR .'set_config/set_config.php';
 		static $first = true;
 		if ( $first ){
 			if ( !$this->uid ){
@@ -326,14 +336,24 @@ Class browser{
 			//while( !$this->PHPLock->Lock() ){
 			//	sleep(0.5);
 			//}
-
-			if ( $key = @cloud_memcache::get($this->uid.'_url_key') ){
+			
+			$key = false;
+			
+			if($b_set['server_php_mamcache_server'])
+			    $key = cloud_memcache::get($this->uid.'_url_key');
+			    
+			if ($key){
 				$this->url_key = $key;
 			}else{
 				$this->url_key = -1;
 			}
-
-			if ( $key = @cloud_memcache::get($this->uid.'_pic_key') ){
+			
+			$key = false;
+			
+			if($b_set['server_php_mamcache_server'])
+			    $key = cloud_memcache::get($this->uid.'_pic_key');
+			    
+			if ($key){
 				$this->pic_key = $key;
 			}else{
 				$this->pic_key = -1;
@@ -425,26 +445,34 @@ Class browser{
 	}
 
 	function history_del(){
+	    require ROOT_DIR .'set_config/set_config.php';
 		if ( !$this->uid ){
 			return;
 		}
-
-		@cloud_memcache::set($this->uid.'_history_cache',serialize(array()));
-		@cloud_memcache::set($this->uid.'_history_key',0);
+        if($b_set['server_php_mamcache_server']){
+        		cloud_memcache::set($this->uid.'_history_cache',serialize(array()));
+        		cloud_memcache::set($this->uid.'_history_key',0);
+        }
 	}
 
 	function history_add($title,$url,$content,$mime,$code,$html_size = 0,$pic_size = 0){
+	    require ROOT_DIR .'set_config/set_config.php';
 		if ( !$this->uid ){
 			return null;
 		}
-
-		$history_key = @cloud_memcache::get($this->uid.'_history_key');
+		
+		$history_key = false;
+		
+        if($b_set['server_php_mamcache_server'])
+		    $history_key = cloud_memcache::get($this->uid.'_history_key');
+		    
 		if ( $history_key === false || $history_key >= 1000 ){
 			$history_key = -1;
 		}
 		$history_key++;
-
-		@cloud_memcache::set($this->uid.'_history_key',$history_key);
+		
+        if($b_set['server_php_mamcache_server'])
+		    cloud_memcache::set($this->uid.'_history_key',$history_key);
 
 		$history = $this->history_get();
 		$key_new = num2short($history_key);
@@ -468,7 +496,10 @@ Class browser{
 								'url'		=>	$url,
 								'content'	=>	$content
 							);
-		@cloud_memcache::set($this->uid.'_history_cache',serialize($history));
+		
+		if($b_set['server_php_mamcache_server'])
+		    cloud_memcache::set($this->uid.'_history_cache',serialize($history));
+		    
 		$sql = '';
 		if ( $html_size > 0 ){
 			$sql .= ',num_size_html=num_size_html+'.$html_size;
@@ -481,12 +512,17 @@ Class browser{
 	}
 
 	function history_get($key=false){
+	    require ROOT_DIR .'set_config/set_config.php';
 		if ( !$this->uid ){
 			return array();
 		}
-
-		$history = @cloud_memcache::get($this->uid.'_history_cache');
-		if ( !$history || !$history = @unserialize($history)){
+		
+		$history = false;
+		
+        if($b_set['server_php_mamcache_server'])
+		    $history = cloud_memcache::get($this->uid.'_history_cache');
+		    
+		if ( !$history || !$history = unserialize($history)){
 			$history = array();
 		}
 
@@ -665,7 +701,7 @@ Class browser{
 			$ip = explode(':',$ip);
 			$http = new httplib();
 			$http->set_timeout(20);
-			$http->open('http://home.baidu.com/about/about.html');
+			$http->open('http://home.baidu.com/');
 			if ( !@$http->set_proxy(trim($ip[0]),trim($ip[1])) ){
 				return false;
 			}
@@ -719,7 +755,8 @@ Class browser{
 		}
 		unset($login_key);//config_cutpage,
 		$var = $this->db->fetch_first('SELECT config_ipagent_open,config_ipagent,config_wap2wml,config_useragent,config_pic,config_pic_wap,id,num_time,num_size_html,num_size_pic,num_look,template_foot FROM `browser_users` WHERE name="'.$name.'" AND pass="'.$pass.'"');
-		if ( $var === false ){
+		//exit(json_encode($var));
+		if ( $var === null ){
 			return false;
 		}else{
 			$this->ipagent = $var['config_ipagent'];
@@ -758,7 +795,13 @@ Class browser{
 		return false;
 	}
 
-	function user_reg($name, $pass, $pass1=false, $sendcookie=true){
+	function user_reg($name, $pass, $pass1=false, $sendcookie=true,$vip=false){
+	    if($vip){
+	        //exit("VIP");
+	        Traum_Captcha_question_validate();
+	        
+	    }
+	    
 		if ( $pass1 === false ){
 			$pass = $pass1;
 		}
@@ -769,7 +812,7 @@ Class browser{
 			$error = $this->_user_name_check($name,$pass);
 		}
 		if ( $error === false ){
-			if ( $this->db->fetch_first('SELECT id FROM `browser_users` WHERE name="'.$name.'"') !== false ){
+			if ( $this->db->fetch_first('SELECT id FROM `browser_users` WHERE name="'.$name.'"') !== null ){
 				$error = '该账号['.$name.']已存在';
 			}
 		}
@@ -1021,9 +1064,12 @@ Class browser{
 				$HTTP_Q_GUID && $http->put_header('Q-GUID', $HTTP_Q_GUID) ;
 			}
 			break;
-		case 10://Chrome浏览器
-			$http->put_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.204 Safari/537.36') ;
+		case 10://Chrome浏览器(Phone)
+			$http->put_header('User-Agent', 'Mozilla/5.0 (Linux; Android 7.1.2; Lenovo K3 Note) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.90 Mobile Safari/537.36') ;
 			break;
+		case 11:
+		    $http->put_header('User-Agent',$_SERVER['HTTP_USER_AGENT']);
+		    break;
 		default:
 			//JIUWAP浏览器
 			$http->put_header('User-Agent', 'JIUWAP/'.$version.' (zh-cn; symbianOS9.1; Series60/3.0; Nokia6120cAP3.03)') ;
@@ -1041,26 +1087,30 @@ Class browser{
 	function tempfile_read($file){
 		$var = $this->db->fetch_first('SELECT id,`file`,`time` FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"');
 
-		if ( $var === false ){
+		if ( $var === null ){
 			return false;
 		}else if ( $var['time'] < time_() - 1 * 24 * 60 * 60 ){
 			$this->db->delete('browser_temps_file', 'id='.$var['id'] );
 			return false;
 		}else{
-			return @cloud_storage::read('tmp2_' .$file);
+			return cloud_storage::read('tmp2_' .$file);
 		}
 	}
 
 	function tempfile_exists($file){
-		$var = $this->db->fetch_first('SELECT id,`file`,`time` FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"');
+	    //exit($file);
+	    $sql = 'SELECT id,`file`,`time` FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"';
+		$var = $this->db->fetch_first($sql);
+		//exit($var);
 
-		if ( $var === false ){
+		if ( $var === null ){
 			return false;
 		}else if ( $var['time'] < time_() - 1 * 24 * 60 * 60 ){
+		    //exit($var['id']);
 			$this->db->delete('browser_temps_file', 'id='.$var['id'] );
 			return false;
 		}else{
-			return @cloud_storage::exists('tmp2_' .$file);
+			return cloud_storage::exists('tmp2_' .$file);
 		}
 	}
 
@@ -1068,14 +1118,14 @@ Class browser{
 		if ( $file === false || $file === true ){
 			$query = $this->db->query('SELECT id,`file` FROM `browser_temps_file` WHERE `time`<' .( time_() - 7 * 24 * 60 * 60)  .' ORDER BY id');
 			while ( $var = $this->db->fetch_array($query) ){
-				@cloud_storage::delete('tmp2_' .$var['file']);
+				cloud_storage::delete('tmp2_' .$var['file']);
 				$this->db->delete('browser_temps_file', 'id='.$var['id'] );
 			}
 
 		}else{
 			$var = $this->db->fetch_first('SELECT id FROM `browser_temps_file` WHERE uid='.$this->uid.' AND `file`="'.$file.'"');
 			if ( $var ){
-				@cloud_storage::delete('tmp2_' .$file);
+				cloud_storage::delete('tmp2_' .$file);
 				$this->db->delete('browser_temps_file', 'id='.$var['id'] );
 			}
 		}
@@ -1117,7 +1167,11 @@ Class browser{
 		}
 	}
 	function quickLogin_set(){
-		$token = cloud_memcache::get('tmp_quicklogin_' . $this->uid);
+	    require ROOT_DIR .'set_config/set_config.php';
+	    
+	    if($b_set['server_php_mamcache_server'])
+		    $token = cloud_memcache::get('tmp_quicklogin_' . $this->uid);
+		    
 		echo $token;exit;
 	}
 

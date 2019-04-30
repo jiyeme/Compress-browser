@@ -60,7 +60,7 @@ echo '<?xml version="1.0" encoding="utf-8"?>
         break;
     }
 	echo '<hr/>';
-	echo 'Powered By <a href="http://jiuwap.cn">jiuwap.cn</a>';
+	echo 'Powered By <a href="#">jiuwap.cn</a>';
 	echo '</body></html>';
 	exit;
 

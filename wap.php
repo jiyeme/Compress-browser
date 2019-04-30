@@ -30,8 +30,10 @@ if ( $h <> ''){
 if ( isset($_GET['save']) && isset($_GET['wap']) || $_GET['wap'] == $browser->template ){
 	if ( $_GET['wap'] == 0 ){
 		$browser->template_set('0');
-	}else{
+	}else if( $_GET['wap'] == '1'){
 		$browser->template_set('1');
+	}else{
+	    $browser->template_set('2');
 	}
 	header('location: '.$url);
 	exit;

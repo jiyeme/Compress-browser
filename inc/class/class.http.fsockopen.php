@@ -51,6 +51,7 @@ class http_fsockopen Extends http_base implements Ihttp_api{
 
 	public function open($url=false){
 		$url !==false && parent::put_url($url);
+		//exit($this->_proxy['1']);
 		if ( $this->urls['ip'] === false ){
 			return false;
 		}
@@ -59,11 +60,14 @@ class http_fsockopen Extends http_base implements Ihttp_api{
 			$this->urls['ip2'] = $this->_proxy['0'];
 			$this->urls['port2'] = $this->_proxy['1'];
 		}else{
+		    $this->urls['host2'] = $this->urls['host'];
 			$this->urls['path2'] = $this->urls['path'].$this->urls['query'];
 			$this->urls['ip2'] = $this->urls['ip'];
 			$this->urls['port2'] = $this->urls['port'];
+            $this->urls['protocol2'] = $this->urls['protocol'];
 		}
-		$this->fp = @fsockopen($this->urls['ip2'], $this->urls['port2'], $errno, $errstr, $this->timeout);
+		//exit($this->urls['protocol2'].'&'.$this->urls['port2']);
+		$this->fp = @fsockopen($this->urls['protocol2'].$this->urls['host2'], $this->urls['port2'], $errno, $errstr, $this->timeout);
 
 		if ( $this->fp === false ){
 			//异常,
@@ -111,11 +115,15 @@ class http_fsockopen Extends http_base implements Ihttp_api{
 			throw new Exception('Please [$this->open] !');
 		}
 		$SendStr  = "{$this->method} {$this->urls['path2']} HTTP/1.1\r\n";
-		if ( $this->urls['port']==80 ){
+		/*if($this->urls['shame'] == 'https'){
+		    $SendStr .= "Host: {$this->urls['host']}:443\r\n";
+		}else if ( $this->urls['port']==80 ){*/
 			$SendStr .= "Host: {$this->urls['host']}\r\n";
-		}else{
+		/*}else{
 			$SendStr .= "Host: {$this->urls['host']}:{$this->urls['port']}\r\n";
-		}
+		}*/
+		
+		
 		if ( $this->_cookies ){
 			$this->_headers['Cookie'] = '';
 			foreach ($this->_cookies as $key => $value) {
@@ -291,6 +299,7 @@ class http_fsockopen Extends http_base implements Ihttp_api{
 		return $this->static_response;
 	}
 }
+
 /*
 //调试
 $http = new http_fsockopen();
@@ -302,7 +311,7 @@ $http = new http_fsockopen();
 
 //$http->set_proxy('www3300ue.sakura.ne.jp','8080');
 
-$http->open('http://www.baidu.com');
+$http->open('https://www.jysafe.cn/microsoft/os-optimize');
 //$http->put_cookie('aa','bb');
 
 $http->put_header_default();

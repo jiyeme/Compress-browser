@@ -26,6 +26,7 @@ class db{
 
 	function delete($table,$where='', $limit = 0, $unbuffered = true){
 		$sql = 'DELETE FROM '.$table.($where ? " WHERE $where" : '').($limit ? " LIMIT $limit" : '');
+		//exit($sql);
 		return $this->query($sql, ($unbuffered ? 'UNBUFFERED' : ''));
 	}
 
@@ -78,6 +79,7 @@ class db{
 	}
 
 	function fetch_first($sql) {
+	    //exit($sql);
 		return $this->fetch_array($this->query($sql));
 	}
 
@@ -86,7 +88,7 @@ class db{
 	}
 
 	function query($sql, $type = '') {
-		$func = $type == 'UNBUFFERED' && @function_exists('mysqli_unbuffered_query') ? 'mysqli_unbuffered_query' : 'mysqli_query';
+		$func = $type == 'UNBUFFERED' && function_exists('mysqli_unbuffered_query') ? 'mysqli_unbuffered_query' : 'mysqli_query';
 		if(!($query = $func($this->curlink, $sql))) {
 			if(in_array($this->errno(), array(2006, 2013)) && substr($type, 0, 5) != 'RETRY') {
 				$this->connect();
@@ -114,7 +116,9 @@ class db{
 	}
 
 	function result($query, $row = 0) {
-		return @mysqli_result($query, $row);
+		//return @mysqli_result($query, $row);
+		
+	    return mysqli_select_db($query, $row);
 	}
 
 	function num_rows($query) {
@@ -150,7 +154,7 @@ class db{
 	}
 
 	function close() {
-		return @mysqli_close($this->curlink);
+		return mysqli_close($this->curlink);
 	}
 
 	function halt($message='',$sql='') {

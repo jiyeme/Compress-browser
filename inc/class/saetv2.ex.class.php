@@ -8,10 +8,11 @@
 /**
  * @ignore
  */
+ /*
 class OAuthException extends Exception {
 	// pass
 }
-
+*/
 
 /**
  * 新浪微博 OAuth 认证类(OAuth2)

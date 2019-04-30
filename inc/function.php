@@ -3,7 +3,7 @@
  *
  *	浏览器->共用的函数库
  *
- *	2012/7/26 星期四 @ jiuwap.cn
+ *	2019/4/17 星期三 @ jysafe.cn
  *
  */
 
@@ -553,18 +553,20 @@ Function GetHost($h){
 }
 
 function qqagent_init(){
+    require_once(ROOT_DIR.'set_config/set_config.php');
 	global $b_set;
 	if ( !$b_set['switch']['qqua'] ){
 		return ;
 	}
 	global $HTTP_Q_UA,$HTTP_Q_AUTH,$HTTP_Q_GUID;
 	$HTTP_Q_UA = $HTTP_Q_AUTH = $HTTP_Q_GUID = '' ;
-
-	$result = @cloud_memcache::get('qq_ua');
+	
+    @$result = cloud_memcache::get('qq_ua');
+    	
 	if ( $result === false ){
 		$HTTP_Q = array();
 	}else{
-		$result = @unserialize($result);
+		$result = unserialize($result);
 		if ( $result === false || $result === NULL ){
 			$HTTP_Q = array();
 		}else{
@@ -581,6 +583,7 @@ function qqagent_init(){
 				'HTTP_Q_AUTH'=>$HTTP_Q_AUTH,
 				'HTTP_Q_GUID'=>$HTTP_Q_GUID,
 			);
+			
 			@cloud_memcache::set('qq_ua',serialize($HTTP_Q));
 		}
 	}
@@ -660,7 +663,7 @@ function fix_r_n_t($str){
 }
 
 function str_fix_chinese($str){
-	@$str = iconv('utf-8','utf-8//IGNORE', $str);
+	$str = iconv('utf-8','utf-8//IGNORE', $str);
 	return $str;
 }
 
@@ -679,7 +682,7 @@ function deldir($dir,$deldir=true) {
 		}
 		closedir($dh);
 		if ( $deldir ){
-			@rmdir($dir);
+			rmdir($dir);
 		}
 	}
 }
@@ -687,7 +690,7 @@ function deldir($dir,$deldir=true) {
 
 function getUTFString($string,&$code=''){
 	$code = mb_detect_encoding($string, array('ASCII','UTF-8','GB2312','GBK','BIG5'));
-	return @mb_convert_encoding($string, 'utf-8', $code);
+	return mb_convert_encoding($string, 'utf-8', $code);
 }
 
 
@@ -1010,8 +1013,8 @@ function quick_connect($url){
 		return;
 	}
 	//echo $out;exit;
-	@fwrite($fp, $out);
-	@fclose($fp);
+	fwrite($fp, $out);
+	fclose($fp);
 }
 
 function file_get_content($url){
@@ -1130,3 +1133,49 @@ function loginfo($msg)
     file_put_contents($logFile, date('[Y-m-d H:i:s]: ') . $msg . PHP_EOL, FILE_APPEND);
     return $msg;
 }
+
+//验证码
+    
+
+//获取验证码
+function traum_captcha_get() {
+    session_start();
+    $traum_captcha = new Traum_captcha();
+    $traum_captcha_type = $_GET['traum_captcha_type'];
+    $traum_captcha -> $traum_captcha_type();
+    //echo $traum_captcha_type;
+    exit;
+}
+
+//检验输入的验证码是否正确
+function Traum_Captcha_question_validate() {
+
+    /*
+    eregi('[0-9]', $str) //数字
+eregi('[a-zA-Z]', $str)//英文
+*/
+session_start();
+    if (!empty($_POST['vcode1'])) {
+        $vcode = $_POST['vcode1'];
+
+    } else if (!empty($_POST['vcode2'])) {
+        $vcode = $_POST['vcode2'];
+
+    } else if (!empty($_POST['vcode3'])) {
+        $vcode = $_POST['vcode3'];
+
+    }
+
+    //exit($vcode);
+    
+    $regex = '/^[0-9a-zA-Z]+$/i';
+    if (!preg_match($regex, $vcode)) {
+        exit('非法字符'.$_SESSION['Checknum']);
+    }
+
+    if ($vcode != $_SESSION['Checknum']) {
+        exit('<strong>错误</strong>: 您的回答不正确。'.$_SESSION['Checknum']);
+
+    }
+}
+

@@ -1,6 +1,6 @@
 <?php
 
-$api = 'http://api.jiuwap.cn/browser_update/?host='.urlencode($_SERVER["SERVER_NAME"]).'&version='.$version.'&cmd=';
+$api = 'http://api.jysafe.cn/browser_update/?host='.urlencode($_SERVER["SERVER_NAME"]).'&version='.$version.'&cmd=';
 
 $cmd = isset($_GET['cmd']) ? trim($_GET['cmd']) : '';
 
@@ -57,8 +57,8 @@ if ( $cmd == 'go'){
 	if ( $net_version = @file_get_contents($api.'getversion') ){
 		echo '最新:'.$net_version.'<br/>';
 
-		if ( $net_version > $version ){
-			echo '您当前的玖玩浏览器版本低于玖玩服务器最新版,<a href="index.php?do=update&amp;cmd=go">立即升级</a><br/>';
+		if ( $net_version > $version && $net_version !== $version){
+			echo '您当前的玖玩浏览器版本低于玖玩服务器最新版('.$net_version.'),<a href="index.php?do=update&amp;cmd=go">立即升级</a><br/>';
 		}else{
 			echo '您当前的玖玩浏览器不需要升级哦！<br/>';
 		}

@@ -183,10 +183,12 @@ abstract class http_static{
 			$time = self::strtotime("$matches[3] Mon Feb 20 2012",true)+$timeThroughDay;
 			//var_dump( strtotime($matches[1]));
 		}else if ( empty($time) ){
-			$str = preg_replace('@([1-2][0-9][0-9][0-9])@ies', "self::strtotime(false,'\\1')", $str);
+			//$str = preg_replace('@([1-2][0-9][0-9][0-9])@ies', "self::strtotime(false,'\\1')", $str);
+            $str = preg_replace_callback('@([1-2][0-9][0-9][0-9])@i', function($i){return "self::strtotime(false,'".$i[1]."')";}, $str);
 			$time = strtotime($str);
 			if ( empty($time) ){
-				$str = preg_replace('@([1-3][0-9]\-[a-zA-Z][a-zA-Z][a-zA-Z]\-)([1-9][0-9])@ies', "'\\1' . self::strtotime(false,'20\\2')", $str);
+				//$str = preg_replace('@([1-3][0-9]\-[a-zA-Z][a-zA-Z][a-zA-Z]\-)([1-9][0-9])@ies', "'\\1' . self::strtotime(false,'20\\2')", $str);
+                $str = preg_replace_callback('@([1-3][0-9]\-[a-zA-Z][a-zA-Z][a-zA-Z]\-)([1-9][0-9])@i', function ($i){return "'$i[1]' . self::strtotime(false,'20$i[2]')";}, $str);
 				$time = strtotime($str);
 			}
 		}
@@ -256,6 +258,7 @@ abstract class http_static{
 		}
 
 		if ( strpos($str,':') === false ){
+		    //exit('aaaa');
 			$port = 80;
 		}else{
 			$ip_agents = explode(':',$str);
@@ -759,10 +762,17 @@ abstract class http_base extends http_static{
 		$urls['query'] = isset($urls['query']) ? $urls['query'] : null;
 		$this->urls['scheme'] = (!isset($urls['scheme']) || $urls['scheme'] == 'http'  ) ? 'http' : 'https';
 		$this->urls['host']  = isset($urls['host']) ? $urls['host'] : null;
-		$this->urls['port']  = empty($urls['port']) ? 80 : (int)$urls['port'];
+		$this->urls['port']  = isset($urls['port']) ? (int)$urls['port'] : ('https' == $urls['scheme'] ? 443 : 80);
+		/*
+		empty($urls['port']) ? 80 : (int)$urls['port'];
+		if ($this->urls['scheme'] == 'https'){
+		    $this->urls['port'] = '443';
+		}
+		*/
 		$this->urls['path']  = empty($urls['path']) ? '/' : $urls['path'];
 		$this->urls['query'] = strlen($urls['query']) > 0 ? '?'.$urls['query'] : null;
 		$this->urls['ip']  = self::getIpByDomian($urls['host'],$this->_dns);
+		$this->urls['protocol'] = 'https' == $this->urls['scheme'] ? 'ssl://' : '';
 		return $this->urls;
 	}
 

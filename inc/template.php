@@ -133,7 +133,7 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	//strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace('/\[main_map_sites=(.*?)\]/ies', "template_main_map_sites('\\1')", $jiuwap_template);
 	strpos($jiuwap_template,'[main_map_sites=')!==false && $jiuwap_template = preg_replace_callback('/\[main_map_sites=(.*?)\]/i', function($i){return template_main_map_sites($i[1]);}, $jiuwap_template);
 	//strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace('/\[main_wap_select=(.*?)\|(.*?)\]/ies', "template_wap_select('\\1','\\2')", $jiuwap_template);
-	strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace_callback('/\[main_wap_select=(.*?)\|(.*?)\]/i', function($i){return template_wap_select($i[1],$i[2]);}, $jiuwap_template);
+	strpos($jiuwap_template,'[main_wap_select=')!==false && $jiuwap_template = preg_replace_callback('/\[main_wap_select=(.*?)\|(.*?)\|(.*?)\]/i', function($i){return template_wap_select($i[1],$i[2],$i[3]);}, $jiuwap_template);
 
 
 	$jiuwap_template = str_replace('[username]',$browser->uname,$jiuwap_template);
@@ -151,6 +151,8 @@ function load_template($file,$Powered=true,$jump=false,$jump_wait=false){
 	$jiuwap_template = str_replace('[icp]',$b_set['icp'],$jiuwap_template);
 
 	strpos($jiuwap_template,'[reg_form]')!==false && $jiuwap_template = str_replace('[reg_form]',template_reg_form(),$jiuwap_template);
+
+strpos($jiuwap_template,'[reg_vip_form]')!==false && $jiuwap_template = str_replace('[reg_vip_form]',template_reg_vip_form(),$jiuwap_template);
 
 	if ( $get_string ){
 		$jiuwap_template = str_replace('[get_string]',$get_string,$jiuwap_template);
@@ -307,6 +309,95 @@ function template_reg_form(){
 			</go>注册</anchor><br/>';
 	}
 }
+
+function template_reg_vip_form(){
+	global $browser;
+	if ( $browser->template == 0 ){
+		return reg_vip_form_captcha();
+	}else{
+		return '账号：<input name="name" type="text" value=""/><br/>
+		密码：<input name="pass" type="password" value=""/><br/>
+		<anchor>
+			<go href="reg.php?yes=yes&amp;r='.$browser->rand.'" method="post">
+			<postfield name="name" value="$name" />
+			<postfield name="pass" value="$pass" />
+			</go>注册</anchor><br/>';
+	}
+}
+
+function reg_vip_form_captcha(){
+    global $browser;
+    ?><form action="reg.vip.php?yes=yes&r=<?php echo $browser->rand; ?>" method="post">
+		账号：<input type="text" name="name" value="" /><br />
+		密码：<input type="password" name="pass" value="" /><br />
+		<p>
+        <label>验证码(点击图像更换)</label><br><br>
+        <input type="text" name="ctype" id="ts" style="display: none" value="vcode">
+        <div id="fzs">
+            <div align="center">
+                <img style="background-color: white;max-width:100%" id="v" onclick="change()" src="/captcha.php?traum_captcha_type=Chemical">
+            </div>
+            <div class="form-group label-floating is-empty">
+                <label class="control-label" for="focusedInput1">请输入上图物质的分子式</label>
+                <input class="form-control" name="vcode2" id="vcode" type="text">
+            </div>
+        </div>
+        <div id="ev" style="display:none;">
+            <div align="center">
+                <img style="background-color: white;max-width:100%" id="ve" onclick="change()">
+            </div>
+            <div class="form-group label-floating is-empty">
+                <label class="control-label" for="focusedInput1">请输入上图事件发生日期</label>
+                <input class="form-control" name="vcode1" id="vcode1" type="text">
+                <label>格式例如：19890604，公元前请加“-”表示</label>
+            </div>
+        </div>
+        <div id="jz" style="display:none;">
+            <div align="center">
+                <img style="background-color: white;max-width:100%" id="jzi" onclick="change()">
+            </div>
+            <div class="form-group label-floating is-empty">
+                <label class="control-label" for="focusedInput1">请输入上图结果的方阵的行列式的值</label>
+                <input class="form-control" name="vcode3" id="vcode3" type="text">
+                <label>请使用整数表示</label>
+            </div>
+        </div>
+    </p>
+    <br />
+<script crossorigin="anonymous" integrity="sha384-3APoxqwb1eaELGgfoVqjalcD/aSCaFDCzFEgxv+Tplm36hWMIjtbOWPX6vm7Ha7m" src="https://lib.baomitu.com/jquery/1.2.3/jquery.min.js"></script>
+
+    <script>
+        var jq=jQuery.noConflict();
+        function change() {
+            r = Math.random();
+            if (r > 0.66) {
+                jq("#fzs").hide();
+                jq("#jz").hide();
+                jq("#ev").show();
+                jq("#ve").attr('src', '/captcha.php?traum_captcha_type=History&t=' + Math.random());
+                ts = "vcode1";
+            } else if (r < 0.66 && r > 0.33) {
+                jq("#ev").hide();
+                jq("#jz").hide();
+                jq("#fzs").show();
+                jq("#v").attr('src', '/captcha.php?traum_captcha_type=Chemical&t=' + Math.random());
+                ts = "vcode2";
+            } else {
+                jq("#jz").show();
+                jq("#fzs").hide();
+                jq("#ev").hide();
+                jq("#jzi").attr('src', '/captcha.php?traum_captcha_type=Matrix&t=' + Math.random());
+                ts = "vcode3";
+            }
+            jq("#ts").val(ts);
+        }
+    </script>
+    <br />
+<input type="submit" value="注册" />
+		</form>
+    <?php
+}
+
 function template_login_form(){
 	global $browser;
     if ( $browser->template == 0 ){
@@ -332,12 +423,15 @@ function template_login_form(){
 }
 
 
-function template_wap_select($a,$b){
+function template_wap_select($a,$b,$c){
 	global $browser;
 	if ( $browser->template == 1 ){
-		return $a.'|<a href="wap.php?back=login&amp;wap=0">'.$b.'</a>';
+	    //wap1.1
+		return $a.'|<a href="wap.php?back=login&amp;wap=0">'.$b.'</a>'.$c;
+	}else if($browser->template == 0){//wap2.0
+		return '<a href="wap.php?back=login&amp;wap=1">'.$a.'</a>|'.$b.'|<a href="wap.php?back=login&amp;wap=2">'.$c.'</a>';
 	}else{
-		return '<a href="wap.php?back=login&amp;wap=1">'.$a.'</a>|'.$b;
+	    
 	}
 }
 

@@ -1,103 +1,120 @@
 <?php
-$html = file_get_contents('a.txt');
-
-
-$html = preg_replace_callback('/<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
-
-        //$html = preg_replace_callback('/<([\/a-zA-Z1-5]{1,9}[1-5]{0,1})>/i', function($i){return check_xml($i[1],$i[2]);}, $html);//php7
-        $html = preg_replace('@<([/a-zA-Z1-5]{1,9}[1-5]{0,1})>@ies', "check_xml('\\1','\\2')", $html);//php5.4
-		$html = htmlspecialchars_decode($html);
-		
-		
-		echo $html;
-
-
-
-function check_xml($xml,$str){
-    $str = str_replace('\"','"',$str);
-    $xml = strtolower($xml);
-    if ( $xml == '!doctype' ){
-        $xml = '!DOCTYPE';
-    }
-    global $browser,$mime;
-    if ( in_array($xml,array('/iframe','/img','/input','/meta','/link','/footer','footer','/section','section')) ){
-        return '';
-    }
-    if ( $browser->wap2wml==0 && $mime <> 'text/vnd.wap.wml' && $mime <> 'application/vnd.wap.xhtml+xml'){
-        if ( strpos($str,'class="')){
-            $str = trim(preg_replace('@class="(.*?)"@i','', $str));
+/*
+ * 使用http接口请求数据
+ * 可以在$url按格式指定协议与端口 https://domain.com:443/path?querystring
+ * 返回array
+ * $method = 'PROXY'时,$post=" GET url  HTTP/1.0\r\n",也就是代理请求的方法自己设置
+ */
+function request($url = '', $post = null /* 数组*/, $method = 'GET', $header = null, $timeout = 20 /* ms */) {
+    if (empty($url)) return array('error' => 'url必须指定');
+    $url = parse_url($url);
+    $method = strtoupper(trim($method));
+    $method = empty($method) ? 'GET' : $method;
+    $scheme = strtolower($url['scheme']);
+    $host = $url['host'];
+    $path = $url['path'];
+    empty($path) and ($path = '/');
+    $query = $url['query'];
+    $port = isset($url['port']) ? (int)$url['port'] : ('https' == $scheme ? 443 : 80);
+    $protocol = 'https' == $scheme ? 'ssl://' : '';
+    echo $protocol.$host.$port;
+    if (!$res = fsockopen($protocol.$host, (int)$port, $errno, $errstr, (int)$timeout)) {
+        return array('error' => mb_convert_encoding($errstr, 'UTF-8', 'UTF-8,GB2312'), 'errorno' => $errno);
+    } else {
+        $crlf = "\r\n";
+        $commonHeader = $method == 'PROXY' ? array() : array(
+            'Host' => $host
+            ,'User-Agent' => 'Mozilla/5.0 (Windows NT 6.1; rv:16.0) Gecko/20100101 Firefox/16.0'
+            ,'Content-Type' => 'POST' == $method ? 'application/x-www-form-urlencoded' : 'text/html; charsert=UTF-8'
+            ,'Connection' => 'Close'
+        );                
+        is_array($header) and ($commonHeader = array_merge($commonHeader, $header));
+        
+        foreach ($commonHeader as $key => & $val) {
+            $val = str_replace(array("\n", "\r", ':'), '', $val);
+            $key = str_replace(array("\n", "\r", ':'), '', $key);
+            $val = "{$key}: {$val}{$crlf}";
+        }     
+        
+        if ($method == 'PROXY') {
+            $post = trim(str_replace(array("\n", "\r"), '', $post)).$crlf;
+            
+            if (empty($post)) return array('error' => '使用代理时,必须指定代理请求方法($post参数)');
+        } else if (!is_array($post)) {
+            $post = array();
         }
-        if ( strpos($str,'id="')){
-            $str = trim(preg_replace('@id="(.*?)"@i','', $str));
+        
+        switch ($method) {
+            case 'POST':                        
+                $post = http_build_query($post);
+                $query = empty($query) ? '' : '?'.$query;
+                $commonHeader[] = 'Content-Length: '.strlen($post).$crlf;
+                $post = empty($post) ? '' : $crlf.$post.$crlf;
+                $commonHeader = implode('', $commonHeader);
+                $request = "{$method} {$path}{$query} HTTP/1.1{$crlf}"
+                            ."{$commonHeader}"
+                            .$post
+                            .$crlf;//表示提交结束了
+                break;
+            case 'PROXY'://代理
+                $commonHeader = implode('', $commonHeader);
+                $request =  $post
+                            .$commonHeader
+                            .$crlf;//表示提交结束了                
+                break;
+            case 'GET':
+            default:
+                empty($query) ? ($query = array()) : parse_str($query, $query);
+                $query = array_merge($query, $post);
+                $query = http_build_query($query);
+                $commonHeader = implode('', $commonHeader);
+                $query = empty($query) ? '' : '?'.$query;
+                $request =  "{$method} {$path}{$query} HTTP/1.1{$crlf}"
+                            ."{$commonHeader}"
+                            .$crlf;//表示提交结束了
         }
-        if ( in_array($xml,array('tbody','/tbody','noframes','/noframes','embed','/embed','object','/object','param','/param','frameset','/frameset','p','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','s','/s','b','/b','map','/map','area','/area','wbr','/wbr','tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script','/script','link','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','center','/center','small','/small','strong','/strong','li','ul','table','div','span','/span')) ){
-            return '';
-        }elseif ( in_array($xml,array('br','br/','/table','/div','/li','/ul','/tr','/p','/td')) ){
-            return '<br/>';
-        }
-    }elseif ( $browser->wap2wml==3 && $mime <> 'text/vnd.wap.wml' ){
-        if ( $xml == '!doctype' ){
-            return '<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">';
-        }elseif ( $xml == 'html' ){
-            return '<wml>';
-        }elseif ( $xml == '/html' ){
-            return '</card></wml>';
-        }elseif( $xml =='select'){
-            return parse_xml_wml_select($str);
-        }elseif( $xml =='textarea'){
-            return parse_xml_textarea2input($str);
-        }elseif( $xml =='hr'){
-            return '<br/>----------<br/>';
-        }else{
-            if ( in_array($xml,array('label','/label','tbody','/tbody','noframes','embed','/embed','object','/object','param','/param','/noframes','frameset','/frameset','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','s','/s','b','/b','map','/map','area','/area','wbr','/wbr','body','/body','tr','/tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script','/script','link','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','center','/center','small','/small','strong','/strong','li','ul','table','div','span','/span','/form','/textarea')) ){
-                return '';
-            }elseif ( in_array($xml,array('br','br/','/td','/table','/div','/li','/ul')) ){
-                return '<br/>';
-            }
-        }
-    }elseif ( $browser->wap2wml==1 && $mime <> 'text/vnd.wap.wml' ){
-        if ( $xml == '!doctype' ){
-            return '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">';
-        }else{
-            if ( in_array($xml,array('label','/label','tbody','/tbody','noframes','/noframes','frameset','/frameset','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','map','/map','area','/area','wbr','/wbr','tr','/tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script','/script','link','center','/center','small','/small','li','ul','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','table')) ){
-                return '';
-            }elseif ( in_array($xml,array('br','br/','/td','/table','/li','/ul')) ){
-                return '<br/>';
-            }
-        }
-    }elseif ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
-        if ( $xml == '!doctype' ){
-            return '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">';
-        }elseif ( $xml == 'wml' ){
-            return '<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="application/vnd.wap.xhtml+xml;charset=utf-8"/>';
-        }elseif ( $xml == '/wml' ){
-            return '</html>';
-        }elseif ( $xml == '/card' ){
-            return '</body>';
-        }elseif ( $xml == 'card' ){
-            return parse_xml_wml2web_card($str).'<style>body{font-size:15px;color:#000;font-family:Arial,Helvetica,sans-serif;}a{color:#039;text-decoration:none;}</style></head><body>';
-        }elseif ( $xml == 'timer' ){
-            $value = get_xml($str,'value');
-            if ( $value <> ''){
-                global $wml2web_card_ontimer;
-                $wml2web_card_ontimer = (int)$value;
-            }
-            return '';
-        }
-    }
 
-    if ( in_array($xml,array('link','option','a','form','img','meta','go','card','input','base','button','iframe','frame')) ){
-        $xml = 'parse_xml_'.$xml;
-        return $xml($str);
-    }else{
-        if ( $str ){
-            if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' && $xml == 'p'){
-                return '<p>';
-            }else{
-                return '<'.$xml.' '.$str.'>';
-            }
-        }else{
-            return '<'.$xml.'>';
+        fwrite($res, $request);
+        $reponse = '';
+        
+        while (!feof($res)) {
+            $reponse .= fgets($res, 128);
         }
+        
+        fclose($res);
+        $pos = strpos($reponse, $crlf . $crlf);//查找第一个分隔                
+        if($pos === false) return array('reponse' => $reponse);
+        $header = substr($reponse, 0, $pos);
+        $body = substr($reponse, $pos + 2 * strlen($crlf));       
+        
+        //exit($header);
+         //重定向
+ if(preg_match("/^HTTP\/\d.\d 301 Moved Permanently/is",$header)){
+     //exit('我进来了');
+  if(preg_match("/Location:(.*?)\r\n/is",$header,$murl)){
+      //exit("我进来了".$murl[1]);
+      $url=trim($murl[1]);
+      return request($url);
+  }
+ }
+
+ if(preg_match("/^HTTP\/\d.\d 302 /is",$header)){
+     //exit('我进来了');
+  if(preg_match("/Location:(.*?\/\/.+?)\//is",$header,$murl)){
+      //exit("我进来了".$murl[1]);
+      $url=trim($murl[1]);
+      return request($url);
+  }
+ }
+ //读取内容
+/* if(preg_match("/^HTTP///d./d 200 OK/is",$body)){
+  preg_match("/Content-Type:(.*?)/r/n/is",$body,$murl);
+  $contentType=trim($murl[1]);
+  $Content=explode("/r/n/r/n",$Content,2);
+  $Content=$Content[1];
+ }*/
+ 
+        return array('body' => $body, 'header' => $header);
     }
 }
+print_r(request('https://www.wodemo.com'));
