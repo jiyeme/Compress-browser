@@ -362,6 +362,7 @@ Class browser{
 			$first = false;
 		}
 
+		//type: url--0   pic--1 
 		if ( $type == 'url' ){
 			$md5_url = md5($url);
 			if ( isset($this->_cacheurl_have[$md5_url]) ){
@@ -410,6 +411,7 @@ Class browser{
 		}elseif ( $type == 'pic' ){
 			$var = $this->db->fetch_first('SELECT content FROM `browser_caches` WHERE keyid="'.$this->uid.'p'.$this->fixlower($key).'" AND type=1 AND uid='.$this->uid);
 			//loginfo('SELECT content FROM `browser_caches` WHERE keyid="'.$this->uid.'p'.$this->fixlower($key).'" AND type=1 AND uid='.$this->uid);
+			//var_dump($var['content']);
 			if ( $var['content'] ){
 				if ( !$var['content'] = @unserialize($var['content']) ){
 					return array();

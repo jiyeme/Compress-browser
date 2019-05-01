@@ -13,7 +13,7 @@
 $_GET['p'] = trim($_GET['p']);
 $arr = $browser->cache_get('pic',$_GET['p']);
 
-
+//var_dump($arr['url']);
 if ( !isset($arr['url']) || empty($arr['url']) ){
 	header('HTTP/1.0 404 Not Found');
 	exit;

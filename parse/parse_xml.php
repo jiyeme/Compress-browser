@@ -4,7 +4,7 @@
  *	浏览器->解析XML
  *
  *	2011-1-14 @ jiuwap.cn
- *  2019-4-12 @ jysafe.cn
+ *  2019-5-1 @ jysafe.cn
  *
  */
 
@@ -59,6 +59,11 @@ if ( stripos($html,'<style')!==false  && stripos($html,'style>')!==false  ){
     //traum
     //$html = preg_replace('@<style(.*?)style>@ies',"'<style'.fix_css('\\1').'style>'", $html);
 	$html = preg_replace_callback('/<style(.*?)style>/i',function ($i){return '<style'.fix_css($i[1]).'style>';}, $html);
+}
+if ( stripos($html,'style="')!==false){
+    //traum
+    //$html = preg_replace('@<style(.*?)style>@ies',"'<style'.fix_css('\\1').'style>'", $html);
+	$html = preg_replace_callback('/style="(.*?)"/i',function ($i){return 'style="'.fix_css($i[1]).'"';}, $html);
 }
 $__wap = array('vnd.wap.wmlscriptc','vnd.wap.wml');
 $__web = array('xhtml+xml','text/html');

@@ -30,3 +30,4 @@ $html = fix_css($html,false);
 $html = str_ireplace('&at;at;','@',$html);
 
 echo $html;
+exit;

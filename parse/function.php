@@ -773,6 +773,8 @@ function fix_css($str,$fix=true){
     if ( strpos($str,'/*')!==false && strpos($str,'*/')!==false ){
         $str = preg_replace("@\/\*(.+?)\*\/@i", '', $str);
     }
+    
+    //处理css中的图片
     global $browser;
     if ( $browser->pic == 0 || $browser->pic == 1 || $browser->pic == 5 ){
         $str = preg_replace("@background:url\((.+?)\)@i", 'background:none', $str);
@@ -783,8 +785,22 @@ function fix_css($str,$fix=true){
     }else{
         //traum
         //$str = preg_replace("@background:url\((.+?)\)@ies", "'background:url(?p='._browser_cache_add_pic('\\1').')'", $str);
-        $str = preg_replace_callback("@background:[a-z- ]+url\((.+?)\)@i", function($i){return (stripos($i[1],'data:image/png') !== 0)?'background:url(?p='._browser_cache_add_pic($i[1]).')':'background:url('.$i[1].')';}, $str);
+        $str = preg_replace_callback("@background(.+?)url\((.+?)\)@i", function($i){return (stripos($i[1],'data:image/png') !== 0)?'background'.$i[1].'url(?p='._browser_cache_add_pic($i[2]).')':'background'.$i[1].'url('.$i[2].')';}, $str);
     }
+    
+    //处理css中的字体
+    $str = preg_replace_callback("@url\([a-z\/]+fontawesome-webfont.eot\?v=4.7.0\)@i", function($i){return "url(assets/fonts/fontawesome-webfont.eot?v=4.7.0)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+fontawesome-webfont.eot\?#iefix&v=4.7.0\)@i", function($i){return "url(assets/fonts/fontawesome-webfont.eot?#iefix&v=4.7.0)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+fontawesome-webfont.woff\?v=4.7.0\)@i", function($i){return "url(assets/fonts/fontawesome-webfont.woff?v=4.7.0)";}, $str);
+    
+    $str = preg_replace_callback("@url\([a-z\/]+fontawesome-webfont.ttf\?v=4.7.0\)@i", function($i){return "url(assets/fonts/fontawesome-webfont.ttf?v=4.7.0)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+fontawesome-webfont.svg\?v=4.7.0#fontawesomeregular\)@i", function($i){return "url(assets/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+slick.eot\)@i", function($i){return "url(assets/fonts/slick.eot)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+slick.eot\?#iefix\)@i", function($i){return "url(assets/fonts/slick.eot?#iefix)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+slick.woff\)@i", function($i){return "url(assets/fonts/slick.woff)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+slick.ttf\)@i", function($i){return "url(assets/fonts/slick.ttf)";}, $str);
+    $str = preg_replace_callback("@url\([a-z\/]+slick.svg#slick\)@i", function($i){return "url(assets/fonts/slick.svg#slick)";}, $str);
+    
     return $str;
 }
 
