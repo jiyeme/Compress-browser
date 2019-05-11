@@ -39,7 +39,8 @@ if ( stripos($html,'<noscript')!==false  && stripos($html,'</noscript>')!==false
 if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
     //traum
     //$html = preg_replace('@<script(.*?)<\/script>@ies',"script_check_jump('\\1')", $html);
-	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function ($i){return script_check_jump($i[1]);}, $html);
+	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function ($i){return '<script'.script_check_jump($i[1]).'</script>';}, $html);
+    $html = preg_replace_callback('/<script src="(.*?)"><\/script>/i',function ($i){return '<script src="'.fullurl($i[1]).'"></script>';}, $html);
 }
 
 

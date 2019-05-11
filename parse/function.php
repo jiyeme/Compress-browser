@@ -72,12 +72,15 @@ Function GetCode($temp2){
 }
 
 function script_check_jump($str2){
+    //exit($str2);
     $str2 = str_replace('\'','"',$str2);
     $str2 = str_replace('\"','"',$str2);
     global $browser;
     $str = '';
     $top = str_pos($str2,'top.location="','"');
+    //exit(fullurl($str2));
     if ( $top!='' ){
+        exit('1');
         $str .= '[<a href="'.fullurl($top).'">javascript:top.location</a>]';
     }
     $self = str_pos($str2,'self.location="','"');
@@ -92,7 +95,11 @@ function script_check_jump($str2){
     if ( $navigate!='' ){
         $str .= '[<a href="'.fullurl($navigate).'">javascript:window.navigate</a>]';
     }
-    return $str;
+    //exit($str);
+    if($str == '')
+        return $str2;
+    else
+        return $str;
 
 }
 function fullurl($new_url){
