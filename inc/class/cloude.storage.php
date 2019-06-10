@@ -293,6 +293,10 @@ class cloud_storage_php{
 	}
 
 	function write($filename,$contents){
+	    if(!file_exists($this->dir)){
+	        mkdir($this->dir);
+	        //exit($this->dir);
+	    }
 		return file_put_contents($this->dir.$filename,$contents );
 	}
 

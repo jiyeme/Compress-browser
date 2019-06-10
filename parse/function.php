@@ -139,16 +139,21 @@ function fullurl($new_url){
     return $new_url;
 }
 
+//处理源码中的链接等 START
 function check_xml($xml,$str){
-    $str = str_replace('\"','"',$str);
-    $xml = strtolower($xml);
+    $str = str_replace('\"','"',$str);  //将\替换为"
+    $xml = strtolower($xml);            //将所有字母转化为小写
     if ( $xml == '!doctype' ){
         $xml = '!DOCTYPE';
     }
+    
     global $browser,$mime;
-    if ( in_array($xml,array('/iframe','/img','/input','/meta','/link','/footer','footer','/section','section')) ){
+    //in_array 在数组中搜索值 $xml
+    if ( in_array($xml,array('/iframe','/img','/input','/ma','/link','/footer1','footer1','/section','section')) ){
         return '';
     }
+    
+    //0关闭、1web转wap2、2wap转web、3webwap2转wml
     if ( $browser->wap2wml==0 && $mime != 'text/vnd.wap.wml' && $mime != 'application/vnd.wap.xhtml+xml'){
     
         if ( strpos($str,'class="')){
@@ -157,7 +162,7 @@ function check_xml($xml,$str){
         if ( strpos($str,'id="')){
             $str = trim(preg_replace('@id="(.*?)"@i','', $str));
         }
-        if ( in_array($xml,array('tbody','/tbody','noframes','/noframes','embed','/embed','object','/object','param','/param','frameset','/frameset','p','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','s','/s','b','/b','map','/map','area','/area','wbr','/wbr','tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script','/script','link','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','center','/center','small','/small','strong','/strong','li','ul','table','div','span','/span')) ){
+        if ( in_array($xml,array('tbody','/tbody','noframes','/noframes','embed','/embed','object','/object','param','/param','frameset','/frameset','p','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','s','/s','b','/b','map','/map','area','/area','wbr','/wbr','tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script1','/script/','link','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','center','/center','small','/small','strong','/strong','li','ul','table','div','span','/span')) ){
             return '';
         }elseif ( in_array($xml,array('br','br/','/table','/div','/li','/ul','/tr','/p','/td')) ){
             return '<br/>';
@@ -176,7 +181,7 @@ function check_xml($xml,$str){
         }elseif( $xml =='hr'){
             return '<br/>----------<br/>';
         }else{
-            if ( in_array($xml,array('label','/label','tbody','/tbody','noframes','embed','/embed','object','/object','param','/param','/noframes','frameset','/frameset','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','s','/s','b','/b','map','/map','area','/area','wbr','/wbr','body','/body','tr','/tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script','/script','link','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','center','/center','small','/small','strong','/strong','li','ul','table','div','span','/span','/form','/textarea')) ){
+            if ( in_array($xml,array('label','/label','tbody','/tbody','noframes','embed','/embed','object','/object','param','/param','/noframes','frameset','/frameset','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','s','/s','b','/b','map','/map','area','/area','wbr','/wbr','body','/body','tr','/tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script1','/script1','link','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','center','/center','small','/small','strong','/strong','li','ul','table','div','span','/span','/form','/textarea')) ){
                 return '';
             }elseif ( in_array($xml,array('br','br/','/td','/table','/div','/li','/ul')) ){
                 return '<br/>';
@@ -186,7 +191,7 @@ function check_xml($xml,$str){
         if ( $xml == '!doctype' ){
             return '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">';
         }else{
-            if ( in_array($xml,array('label','/label','tbody','/tbody','noframes','/noframes','frameset','/frameset','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','map','/map','area','/area','wbr','/wbr','tr','/tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script','/script','link','center','/center','small','/small','li','ul','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','table')) ){
+            if ( in_array($xml,array('label','/label','tbody','/tbody','noframes','/noframes','frameset','/frameset','bod','/bod','fieldset','/fieldset','/legend','legend','nobr','/nobr','map','/map','area','/area','wbr','/wbr','tr','/tr','td','em','/em','font','/font','dl','/dl','dd','/dd','dt','/dt','script1','/script1','link','center','/center','small','/small','li','ul','h1','h2','h3','h4','h5','/h1','/h2','/h3','/h4','/h5','table')) ){
                 return '';
             }elseif ( in_array($xml,array('br','br/','/td','/table','/li','/ul')) ){
                 return '<br/>';
@@ -213,8 +218,7 @@ function check_xml($xml,$str){
         }
     }
 
-    if ( in_array($xml,array('link','option','a','form','img','meta','go','card','input1','base','button','iframe','frame')) ){
-    
+    if ( in_array($xml,array('link','option1','a1','form1','img','meta1','go1','card1','input1','base1','button1','iframe1','frame1')) ){
         $xml = 'parse_xml_'.$xml;
         return $xml($str);
     }else{
@@ -228,13 +232,15 @@ function check_xml($xml,$str){
             return '<'.$xml.'>';
         }
     }
-}
+}//check_xml END
+
 function parse_xml_link($str){
     global $browser;
     $rel = get_xml($str,'rel');
     $href = get_xml($str,'href');
     $type = get_xml($str,'type');
-    if ( $type == 'text/css' && $href!='' && $browser->wap2wml!=0 ){
+    //loginfo($href);
+    if (( $type == 'text/css' || $rel =='stylesheet') && $href!='' && $browser->wap2wml!=0 ){
         
         $href = $browser->cache_add('url',fullurl($href));
         if ( $rel!='' ){
@@ -244,7 +250,6 @@ function parse_xml_link($str){
     }
     return '';
 }
-
 
 function parse_xml_wml2web_card($str){
     $title = get_xml($str,'title');
@@ -460,20 +465,31 @@ function parse_xml_img($str){
         $alt = ' alt="'.$alt.'"';
     }
     
+    $class = get_xml($str,'class');
+    if ( $browser->pic == 0 ){
+        if ( $class == ''){
+            $class = '';
+        }
+        return '['.$class.']';
+    }
+    if ( $class!='' ) {
+        $class = ' class="'.$class.'"';
+    }
+    
     if(stripos($src,'data:image/png') !== 0){
         $src = fullurl($src);
     }
     
     if ( $browser->pic == 4 ){
-        return '<img src="'.htmlspecialchars($src).'"'.$alt.'/>';
+        return '<img src="'.htmlspecialchars($src).'"'.$alt.' '.$class.'/>';
     }
     global $url,$mime;
     
     if(stripos($src,'data:image/png') !== 0){
         $src = $browser->cache_add('pic',$src,$url,$mime);
-        return '<img src="?p='.$src.'"'.$alt.'/>';
+        return '<img src="?p='.$src.'"'.$alt.' '.$class.'/>';
     }else{
-        return '<img src="'.$src.'"'.$alt.'/>';
+        return '<img src="'.$src.'"'.$alt.' '.$class.'/>';
     }
 }
 

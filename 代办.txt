@@ -1,2 +1,0 @@
-更正install/set_config.tmp文件
-stripos($src,'data:image/png') !== 0

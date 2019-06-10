@@ -190,13 +190,13 @@ Class browser{
     		cloud_memcache::set($this->uid.'_pic_key',0);
     		}
 
-		return ;
+		//return ;
 
 		if ( $type == 'url' ){
 			$this->db->delete('browser_caches','type=0 AND uid='.$this->uid);
 		}else{
 			/* !!! todo 删除缓存文件 !!! */
-			deldir($b_set['utemp'].'pics/'.$this->uid,false);
+			deldir('./temp/storage',true);
 			$this->db->delete('browser_caches','type=1 AND uid='.$this->uid);
 		}
 	}

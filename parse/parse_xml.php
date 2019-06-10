@@ -40,7 +40,7 @@ if ( stripos($html,'<script')!==false && stripos($html,'</script>')!==false  ){
     //traum
     //$html = preg_replace('@<script(.*?)<\/script>@ies',"script_check_jump('\\1')", $html);
 	$html = preg_replace_callback('/<script(.*?)<\/script>/i',function ($i){return '<script'.script_check_jump($i[1]).'</script>';}, $html);
-    $html = preg_replace_callback('/<script src="(.*?)"><\/script>/i',function ($i){return '<script src="'.fullurl($i[1]).'"></script>';}, $html);
+    $html = preg_replace_callback('/<script(.{0,25})src="(.*?)"><\/script>/i',function ($i){return '<script'.$i[1].'src="'.fullurl($i[2]).'"></script>';}, $html);
 }
 
 
@@ -66,6 +66,7 @@ if ( stripos($html,'style="')!==false){
     //$html = preg_replace('@<style(.*?)style>@ies',"'<style'.fix_css('\\1').'style>'", $html);
 	$html = preg_replace_callback('/style="(.*?)"/i',function ($i){return 'style="'.fix_css($i[1]).'"';}, $html);
 }
+//exit($html);
 $__wap = array('vnd.wap.wmlscriptc','vnd.wap.wml');
 $__web = array('xhtml+xml','text/html');
 $__html = array('text');
@@ -110,6 +111,7 @@ if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	$html = str_ireplace('<head>','', $html);
 
 }elseif ( $browser->wap2wml==3 && $mime != 'text/vnd.wap.wml' ){
+    exit('请联系管理员');
 	$html = preg_replace('@<textarea(.*?)>(.*?)<\/textarea>@i','<textarea$1 value="$2">', $html);
 	$html = preg_replace('@<style(.*?)<\/style>@i','', $html);
 	if ( stripos($html,'<body') && stripos($html,'</body>')  ){
@@ -120,11 +122,9 @@ if ( $browser->wap2wml==2 && $mime == 'text/vnd.wap.wml' ){
 	$html = str_ireplace('</p>','<br/>', $html);
 }
 
-
-//traum
+//traum处理链接
 //$html = preg_replace('@<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>@ies', "check_xml('\\1','\\2')", $html);
 $html = preg_replace_callback('/<([!a-zA-Z]{1,9}[1-5]{0,1}) (.*?)>/i', function($i){return check_xml($i[1],$i[2]);}, $html);
-
 
 $browser->cacheurl_set();
 
@@ -245,7 +245,6 @@ if ( stripos($html,'<wml>')===false && stripos($html,'<html>')===false && stripo
 }
 
 $bottom_str = '';
-
 //最终网页大小
 $html_size_new = strlen($html);
 
