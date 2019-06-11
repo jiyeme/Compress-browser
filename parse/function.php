@@ -218,7 +218,7 @@ function check_xml($xml,$str){
         }
     }
 
-    if ( in_array($xml,array('link','option1','a1','form1','img','meta1','go1','card1','input1','base1','button1','iframe1','frame1')) ){
+    if ( in_array($xml,array('link','option1','a','form','img','meta1','go1','card1','input1','base1','button1','iframe1','frame1')) ){
         $xml = 'parse_xml_'.$xml;
         return $xml($str);
     }else{
@@ -234,6 +234,7 @@ function check_xml($xml,$str){
     }
 }//check_xml END
 
+//处理link标签
 function parse_xml_link($str){
     global $browser;
     $rel = get_xml($str,'rel');
@@ -286,7 +287,6 @@ function parse_xml_iframe($str){
         return '[iframe]';
     }
 }
-
 
 function parse_xml_option($str){
     $value = get_xml($str,'value');
@@ -493,7 +493,6 @@ function parse_xml_img($str){
     }
 }
 
-
 //处理WML里的CARD标签
 function parse_xml_card($str){
     global $browser;
@@ -655,6 +654,22 @@ function parse_xml_a($str){
     $id = get_xml($str,' id');
     $href = get_xml($str,'href');
     $xml_end = get_xml_end($str);
+    
+    $name = get_xml($str,'name');
+    if ( $name!='' ) {
+        $xml_end = ' name="'.$name.'"'.$xml_end;
+    }
+    
+    $class = get_xml($str,'class');
+    if ( $class!='' ) {
+        $xml_end = ' class="'.$class.'"'.$xml_end;
+    }
+    
+    $style = get_xml($str,'style');
+    if ( $style!='' ) {
+        $xml_end = ' style="'.$style.'"'.$xml_end;
+    }
+    
 	global $b_set;
 	static $httplen = false;
 	if ( $httplen ===false ){
